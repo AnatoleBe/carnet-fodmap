@@ -323,6 +323,21 @@
     margin-top:20px;
   }
 
+  input[type="file"]{ background:transparent; border:none; padding:6px 0; width:auto; }
+
+  .scan-verdict{
+    border-radius:12px; padding:16px 18px; margin-top:16px; display:flex; gap:14px; align-items:flex-start;
+  }
+  .scan-verdict.ok{ background:rgba(110,139,90,0.12); border:1px solid var(--success); }
+  .scan-verdict.risky{ background:rgba(181,83,63,0.1); border:1px solid var(--danger); }
+  .scan-verdict .sv-title{ font-weight:700; margin-bottom:4px; }
+  .scan-verdict.ok .sv-title{ color:var(--success-ink); }
+  .scan-verdict.risky .sv-title{ color:var(--danger-ink); }
+  .scan-verdict .sv-flags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .scan-flag{ background:var(--danger); color:#fff; font-size:0.78rem; padding:4px 10px; border-radius:100px; }
+
+  .scan-entry-photo{ width:56px; height:56px; border-radius:10px; object-fit:cover; flex:none; border:1px solid var(--line); }
+
   /* ---------- reintro tab ---------- */
   .food-picker{ position:relative; }
   .food-picker-results{
@@ -491,6 +506,42 @@
         Ce carnet aide à repérer des pistes, mais ne remplace pas l'avis d'un médecin ou d'un(e) diététicien(ne).
       </div>
     </div>
+
+    <div class="card" style="margin-top:20px;">
+      <h2 class="panel-title">📷 Vérifier un produit industriel</h2>
+      <p class="panel-sub">Prends en photo l'emballage pour garder une trace, puis recopie la liste des ingrédients pour savoir si ce produit est plutôt OK ou à éviter.</p>
+
+      <div class="note-box" style="margin-top:0; margin-bottom:18px;">
+        Ce carnet ne peut pas lire le texte d'une photo tout seul (il n'a pas d'accès à un service de reconnaissance d'image). La photo sert de souvenir visuel du produit ; la vérification se fait sur le texte des ingrédients que tu recopies juste en dessous — c'est ce texte qui est comparé à une liste d'ingrédients à risque (ail, oignon, blé, lactose, miel, sorbitol...).
+      </div>
+
+      <form id="scanForm">
+        <div class="journal-form">
+          <div class="full">
+            <label for="scanPhoto">Photo du produit (optionnel)</label>
+            <input type="file" id="scanPhoto" accept="image/*" capture="environment">
+            <div id="scanPreviewWrap" style="display:none; margin-top:10px;">
+              <img id="scanPreview" alt="Aperçu du produit" style="max-width:160px; border-radius:10px; border:1px solid var(--line);">
+            </div>
+          </div>
+          <div class="full">
+            <label for="scanName">Nom du produit</label>
+            <input type="text" id="scanName" placeholder="ex : sauce tomate en bocal, barre de céréales…">
+          </div>
+          <div class="full">
+            <label for="scanIngredients">Liste des ingrédients (recopiée de l'emballage)</label>
+            <textarea id="scanIngredients" rows="3" placeholder="ex : tomates, huile d'olive, ail, oignon, sel, sucre…" required></textarea>
+          </div>
+          <div class="full">
+            <button type="submit" class="primary">Vérifier ce produit</button>
+          </div>
+        </div>
+      </form>
+
+      <div id="scanResult"></div>
+
+      <div class="entries" id="scanHistory" style="margin-top:22px;"></div>
+    </div>
   </section>
 
   <!-- ===================== TAB 4 : RÉINTRODUCTION ===================== -->
@@ -603,10 +654,15 @@ async function loadProfileData(){
   journalEntries = [];
   if(entriesRaw){ try{ journalEntries = JSON.parse(entriesRaw); }catch(e){ journalEntries = []; } }
 
+  const scansRaw = await storeGet(pk('fodmap-product-scans'), true);
+  productScans = [];
+  if(scansRaw){ try{ productScans = JSON.parse(scansRaw); }catch(e){ productScans = []; } }
+
   renderExcludedPanel();
   renderMenus();
   renderTests();
   renderJournal();
+  renderScanHistory();
 }
 
 /* ============================================================
@@ -1121,61 +1177,201 @@ let unlockedFoods = new Set();     // aliments classés "OK" en onglet 04
 // détaillées ci-dessus restent en tête de liste ; celles-ci complètent le choix
 // à partir de combinaisons protéine + féculent + légume, toutes faibles en FODMAP.
 const GEN_PROTEINS = [
-  {n:"poulet", art:"le "}, {n:"bœuf", art:"le "}, {n:"porc", art:"le "}, {n:"poisson blanc", art:"le "},
-  {n:"saumon", art:"le "}, {n:"crevettes", art:"les "}, {n:"thon", art:"le "}, {n:"œufs", art:"les "},
-  {n:"tofu ferme", art:"le "}, {n:"tempeh", art:"le "},
+  {n:"poulet", art:"le "}, {n:"dinde", art:"la "}, {n:"bœuf", art:"le "}, {n:"agneau", art:"l'"},
+  {n:"porc", art:"le "}, {n:"jambon blanc", art:"le "}, {n:"poisson blanc", art:"le "}, {n:"saumon", art:"le "},
+  {n:"thon", art:"le "}, {n:"crevettes", art:"les "}, {n:"moules", art:"les "}, {n:"tofu ferme", art:"le "},
+  {n:"tempeh", art:"le "}, {n:"œufs", art:"les "},
 ];
 const GEN_CARBS = [
   {n:"riz basmati", art:"le "}, {n:"riz complet", art:"le "}, {n:"quinoa", art:"le "},
   {n:"pâtes sans gluten", art:"les "}, {n:"pommes de terre", art:"les "}, {n:"patate douce", art:"la "},
   {n:"galettes de sarrasin", art:"les "}, {n:"polenta", art:"la "}, {n:"nouilles de riz", art:"les "},
+  {n:"millet", art:"le "},
 ];
 const GEN_VEGGIES = [
   {n:"carotte", art:"la "}, {n:"courgette", art:"la "}, {n:"poivron rouge", art:"le "}, {n:"épinards", art:"les "},
   {n:"aubergine", art:"l'"}, {n:"haricots verts", art:"les "}, {n:"brocoli", art:"le "}, {n:"tomate", art:"la "},
   {n:"concombre", art:"le "}, {n:"fenouil", art:"le "}, {n:"chou rouge", art:"le "}, {n:"pleurotes", art:"les "},
-  {n:"radis", art:"les "},
+  {n:"radis", art:"les "}, {n:"navet", art:"le "}, {n:"panais", art:"le "}, {n:"blette", art:"la "},
 ];
-const LUNCH_METHODS = ["grillé(e)","poêlé(e)","sauté(e)","rôti(e) au four"];
-const DINNER_METHODS = ["mijoté(e)","rôti(e) au four","poêlé(e)","en papillote","sauté(e)"];
+const CLASSIC_METHODS = ["grillé(e)","poêlé(e)","sauté(e)","rôti(e) au four","mijoté(e)"];
 
-function generateCombos(count, methods){
+// Chaque "format" est un vrai type de plat (comme dans un livre de recettes),
+// pas juste une variation de protéine. Combiné aux pools ci-dessus, ça donne
+// une très grande variété de plats faibles en FODMAP, tous différents.
+const MAIN_FORMATS = [
+  { id:'classic',
+    name:(p,c,v,m)=> `${capFirst(p.n)} ${m}, ${c.n} et ${v.n}`,
+    ingredients:(p,c,v)=> [`Une portion de ${p.n}`, `80-100 g de ${c.n}`, `Une portion de ${v.n}`, "Un filet d'huile d'olive"],
+    steps:(p,c,v,m)=> [
+      `Fais cuire ${c.art}${c.n} selon les instructions du paquet.`,
+      `Prépare ${p.art}${p.n} ${m}, à la poêle ou au four selon le cas.`,
+      `Fais cuire ${v.art}${v.n} à la vapeur ou à la poêle, puis sers le tout avec ${c.art}${c.n} et ${p.art}${p.n}.`,
+    ] },
+  { id:'wok',
+    name:(p,c,v)=> `Wok de ${p.n} au gingembre, ${c.n} et ${v.n}`,
+    ingredients:(p,c,v)=> [`Une portion de ${p.n}`, `80 g de ${c.n}`, `Une portion de ${v.n} émincé(e)`, "Gingembre frais râpé", "Sauce soja"],
+    steps:(p,c,v)=> [
+      `Fais chauffer un peu d'huile dans un wok ou une grande poêle à feu vif.`,
+      `Fais sauter ${p.art}${p.n} 3-4 minutes, puis réserve.`,
+      `Fais sauter ${v.art}${v.n} émincé(e) avec le gingembre 2-3 minutes, ajoute un peu de sauce soja.`,
+      `Remets ${p.art}${p.n} dans le wok, mélange et sers avec ${c.art}${c.n}.`,
+    ] },
+  { id:'curry',
+    name:(p,c,v)=> `Curry léger de ${p.n}, ${v.n} et ${c.n} au lait de coco`,
+    ingredients:(p,c,v)=> [`Une portion de ${p.n}`, "100 ml de lait de coco (petite quantité)", `Une portion de ${v.n}`, `80 g de ${c.n}`, "Curcuma, cumin, gingembre"],
+    steps:(p,c,v)=> [
+      `Fais chauffer le lait de coco avec le curcuma, le cumin et un peu de gingembre râpé.`,
+      `Ajoute ${p.art}${p.n} et laisse mijoter 8-10 minutes.`,
+      `Ajoute ${v.art}${v.n} coupé(e) en morceaux, poursuis la cuisson 5 minutes.`,
+      `Sers avec ${c.art}${c.n}.`,
+    ] },
+  { id:'soupe',
+    name:(p,c,v)=> `Velouté de ${v.n} au ${p.n}, ${c.n}`,
+    ingredients:(p,c,v)=> [`300 g de ${v.n}`, `Une portion de ${p.n}`, "Bouillon maison (sans ail ni oignon)", `80 g de ${c.n}`, "Huile infusée à l'ail (filtrée)"],
+    steps:(p,c,v)=> [
+      `Fais revenir ${v.art}${v.n} coupé(e) en morceaux dans un peu d'huile infusée.`,
+      `Ajoute le bouillon et laisse mijoter 20 minutes.`,
+      `Mixe jusqu'à obtenir une texture lisse.`,
+      `Sers avec ${p.art}${p.n} poêlé(e) à part et ${c.art}${c.n}.`,
+    ] },
+  { id:'salade',
+    name:(p,c,v)=> `Salade composée : ${p.n}, ${c.n} froid et ${v.n}`,
+    ingredients:(p,c,v)=> [`Une portion de ${p.n} cuit(e) et refroidi(e)`, `80 g de ${c.n} froid(e)`, `Une portion de ${v.n}`, "Huile d'olive, citron"],
+    steps:(p,c,v)=> [
+      `Fais cuire ${p.art}${p.n} et ${c.art}${c.n}, laisse refroidir.`,
+      `Coupe ${v.art}${v.n} et mélange avec ${c.art}${c.n} froid(e).`,
+      `Ajoute ${p.art}${p.n} par-dessus.`,
+      `Assaisonne d'huile d'olive et d'un filet de citron.`,
+    ] },
+  { id:'gratin',
+    name:(p,c,v)=> `Gratin de ${v.n} et ${p.n} au fromage, ${c.n}`,
+    ingredients:(p,c,v)=> [`Une portion de ${p.n}`, `Une portion de ${v.n}`, "Fromage affiné râpé", "Un peu de crème sans lactose", `80 g de ${c.n}`],
+    steps:(p,c,v)=> [
+      `Précuis ${v.art}${v.n} à la vapeur quelques minutes.`,
+      `Dispose ${p.art}${p.n} et ${v.art}${v.n} dans un plat, recouvre de crème et de fromage râpé.`,
+      `Fais gratiner au four 20 minutes à 200°C.`,
+      `Sers avec ${c.art}${c.n}.`,
+    ] },
+  { id:'papillote',
+    name:(p,c,v)=> `${capFirst(p.n)} en papillote, ${v.n} et ${c.n}`,
+    ingredients:(p,c,v)=> [`Une portion de ${p.n}`, `Une portion de ${v.n} en fines lamelles`, "Huile d'olive, citron", `80 g de ${c.n}`],
+    steps:(p,c,v)=> [
+      `Dispose ${p.art}${p.n} et ${v.art}${v.n} sur une feuille de papier cuisson.`,
+      `Arrose d'huile d'olive et de citron, referme la papillote.`,
+      `Fais cuire au four 20-25 minutes à 200°C.`,
+      `Sers avec ${c.art}${c.n}.`,
+    ] },
+  { id:'wrap',
+    name:(p,c,v)=> `Wrap sans gluten au ${p.n} et ${v.n}`,
+    ingredients:(p,c,v)=> ["1 galette sans gluten", `Une portion de ${p.n} cuit(e)`, `Une portion de ${v.n}`, "Mayonnaise ou moutarde"],
+    steps:(p,c,v)=> [
+      `Coupe ${p.art}${p.n} et ${v.art}${v.n} en lanières.`,
+      `Garnis la galette sans gluten avec ${p.art}${p.n}, ${v.art}${v.n} et un peu de sauce.`,
+      `Roule bien serré et coupe en deux.`,
+    ] },
+  { id:'bowl',
+    name:(p,c,v)=> `Bowl ${c.n}, ${p.n} et ${v.n} rôtis`,
+    ingredients:(p,c,v)=> [`80-100 g de ${c.n}`, `Une portion de ${p.n}`, `Une portion de ${v.n}`, "Huile d'olive, graines de courge"],
+    steps:(p,c,v)=> [
+      `Fais cuire ${c.art}${c.n} selon les instructions.`,
+      `Fais rôtir ${p.art}${p.n} et ${v.art}${v.n} au four avec un filet d'huile 20 minutes à 200°C.`,
+      `Compose le bol : ${c.art}${c.n} au fond, ${p.art}${p.n} et ${v.art}${v.n} par-dessus, un peu de graines de courge pour finir.`,
+    ] },
+  { id:'brochette',
+    name:(p,c,v)=> `Brochettes de ${p.n} grillées, ${v.n} et ${c.n}`,
+    ingredients:(p,c,v)=> [`Une portion de ${p.n} en cubes`, `Une portion de ${v.n} en morceaux`, "Huile d'olive, herbes de Provence", `80 g de ${c.n}`],
+    steps:(p,c,v)=> [
+      `Enfile ${p.art}${p.n} et ${v.art}${v.n} en morceaux sur des brochettes.`,
+      `Badigeonne d'huile d'olive et d'herbes de Provence.`,
+      `Fais griller au barbecue ou à la poêle-grill 10-12 minutes en retournant régulièrement.`,
+      `Sers avec ${c.art}${c.n}.`,
+    ] },
+];
+
+function generateMainMeals(target, seedOffset){
   const combos = [];
-  const used = new Set();
-  let pi=0, ci=0, vi=0, mi=0, guard=0;
-  while(combos.length < count && guard < 8000){
+  const usedNames = new Set();
+  let pi=seedOffset, ci=seedOffset*2, vi=seedOffset*3, fi=seedOffset, mi=seedOffset, guard=0;
+  while(combos.length < target && guard < 30000){
     guard++;
-    const protein = GEN_PROTEINS[pi % GEN_PROTEINS.length];
-    const carb = GEN_CARBS[ci % GEN_CARBS.length];
-    const veg = GEN_VEGGIES[vi % GEN_VEGGIES.length];
-    const method = methods[mi % methods.length];
-    const key = protein.n+'|'+carb.n+'|'+veg.n+'|'+method;
-    if(!used.has(key)){
-      used.add(key);
-      combos.push({protein, carb, veg, method});
+    const format = MAIN_FORMATS[fi % MAIN_FORMATS.length];
+    const p = GEN_PROTEINS[pi % GEN_PROTEINS.length];
+    const c = GEN_CARBS[ci % GEN_CARBS.length];
+    const v = GEN_VEGGIES[vi % GEN_VEGGIES.length];
+    const method = CLASSIC_METHODS[mi % CLASSIC_METHODS.length];
+    const name = format.name(p, c, v, method);
+    if(!usedNames.has(name)){
+      usedNames.add(name);
+      combos.push({
+        name,
+        foods: [p.n, c.n, v.n],
+        recipe: { ingredients: format.ingredients(p, c, v, method), steps: format.steps(p, c, v, method) },
+      });
     }
-    pi++; ci+=2; vi+=3; mi++;
+    pi++; ci+=2; vi+=3; fi++; mi+=2;
   }
   return combos;
 }
-function comboToMeal(combo){
-  const {protein, carb, veg, method} = combo;
-  return {
-    name: `${capFirst(protein.n)} ${method}, ${carb.n} et ${veg.n}`,
-    foods: [protein.n, carb.n, veg.n],
-    recipe: {
-      ingredients: [`Une portion de ${protein.n}`, `80-100 g de ${carb.n}`, `Une portion de ${veg.n}`, "Un filet d'huile d'olive"],
-      steps: [
-        `Fais cuire ${carb.art}${carb.n} selon les instructions du paquet.`,
-        `Prépare ${protein.art}${protein.n} ${method}, à la poêle ou au four selon le cas.`,
-        `Fais cuire ${veg.art}${veg.n} à la vapeur ou à la poêle, puis sers le tout avec ${carb.art}${carb.n} et ${protein.art}${protein.n}.`
-      ]
+
+// Générateur de petits-déjeuners (formats + fruits + céréales), même logique
+const GEN_BFAST_FRUITS = [
+  {n:"fraise", art:"la "}, {n:"myrtille", art:"la "}, {n:"framboise", art:"la "}, {n:"kiwi", art:"le "},
+  {n:"orange", art:"l'"}, {n:"ananas", art:"l'"}, {n:"raisin", art:"le "}, {n:"banane pas mûre", art:"la "},
+  {n:"papaye", art:"la "}, {n:"fruit de la passion", art:"le "}, {n:"mandarine", art:"la "},
+];
+const GEN_BFAST_GRAINS = [
+  {n:"avoine", art:"l'"}, {n:"sarrasin", art:"le "}, {n:"quinoa", art:"le "}, {n:"riz complet", art:"le "}, {n:"millet", art:"le "},
+];
+const BFAST_FORMATS = [
+  { id:'porridge',
+    name:(g,f)=> `Porridge de ${g.n}, ${f.n}`,
+    ingredients:(g,f)=> [`40 g de ${g.n}`, "200 ml de lait sans lactose", `Une portion de ${f.n}`],
+    steps:(g,f)=> [`Fais cuire ${g.art}${g.n} dans le lait sans lactose 5-8 minutes.`, `Verse dans un bol.`, `Ajoute ${f.art}${f.n} avant de servir.`] },
+  { id:'smoothie',
+    name:(g,f)=> `Smoothie ${f.n} et lait d'amande`,
+    ingredients:(g,f)=> [`Une portion de ${f.n}`, "150 ml de lait d'amande"],
+    steps:(g,f)=> [`Place tous les ingrédients dans un blender.`, `Mixe jusqu'à obtenir une texture lisse.`, `Sers immédiatement.`] },
+  { id:'yaourt',
+    name:(g,f)=> `Yaourt sans lactose et ${f.n}`,
+    ingredients:(g,f)=> ["150 g de yaourt sans lactose", `Une portion de ${f.n}`, "1 c. à c. de graines de chia"],
+    steps:(g,f)=> [`Coupe ${f.art}${f.n} en morceaux.`, `Mélange au yaourt sans lactose.`, `Parsème de graines de chia.`] },
+  { id:'tartine',
+    name:(g,f)=> `Tartine pain sans gluten, ${f.n}`,
+    ingredients:(g,f)=> ["1 tranche de pain sans gluten", "Beurre", `Une portion de ${f.n}`],
+    steps:(g,f)=> [`Fais griller la tranche de pain sans gluten.`, `Tartine de beurre.`, `Ajoute ${f.art}${f.n} coupé(e) en fines tranches.`] },
+  { id:'pancake',
+    name:(g,f)=> `Pancakes sans gluten, ${f.n}`,
+    ingredients:(g,f)=> ["3 c. à s. de farine sans gluten", "2 œufs", `Une portion de ${f.n}`],
+    steps:(g,f)=> [`Mélange la farine sans gluten et les œufs battus.`, `Fais cuire des petites portions à la poêle 2-3 min de chaque côté.`, `Sers avec ${f.art}${f.n}.`] },
+  { id:'muesli',
+    name:(g,f)=> `Muesli maison ${g.n} et ${f.n}`,
+    ingredients:(g,f)=> [`30 g de ${g.n}`, "Une poignée de noix", "200 ml de lait sans lactose", `Une portion de ${f.n}`],
+    steps:(g,f)=> [`Mélange ${g.art}${g.n} et les noix dans un bol.`, `Verse le lait sans lactose par-dessus.`, `Ajoute ${f.art}${f.n} et laisse reposer quelques minutes.`] },
+];
+function generateBreakfasts(target, seedOffset){
+  const combos = [];
+  const usedNames = new Set();
+  let gi=seedOffset, fi2=seedOffset*2, fmi=seedOffset, guard=0;
+  while(combos.length < target && guard < 20000){
+    guard++;
+    const format = BFAST_FORMATS[fmi % BFAST_FORMATS.length];
+    const g = GEN_BFAST_GRAINS[gi % GEN_BFAST_GRAINS.length];
+    const f = GEN_BFAST_FRUITS[fi2 % GEN_BFAST_FRUITS.length];
+    const name = format.name(g, f);
+    if(!usedNames.has(name)){
+      usedNames.add(name);
+      combos.push({ name, foods: [g.n, f.n], recipe: { ingredients: format.ingredients(g, f), steps: format.steps(g, f) } });
     }
-  };
+    gi++; fi2+=2; fmi++;
+  }
+  return combos;
 }
+
 try{
-  LUNCHES.push(...generateCombos(Math.max(0, 150 - LUNCHES.length), LUNCH_METHODS).map(comboToMeal));
-  DINNERS.push(...generateCombos(Math.max(0, 150 - DINNERS.length), DINNER_METHODS).map(comboToMeal));
+  LUNCHES.push(...generateMainMeals(Math.max(0, 300 - LUNCHES.length), 0));
+  DINNERS.push(...generateMainMeals(Math.max(0, 300 - DINNERS.length), 4));
+  BREAKFASTS.push(...generateBreakfasts(Math.max(0, 80 - BREAKFASTS.length), 0));
 }catch(e){ console.error('Erreur génération de menus :', e); }
 
 function isMealAllowed(meal){
@@ -1407,6 +1603,137 @@ function renderWatchList(){
       <div class="wmeta">douleur moy. ${s.avg.toFixed(1)}/10 · ${s.count} jour${s.count>1?'s':''}</div>
     </div>`;
   }).join('');
+}
+
+/* ============================================================
+   VÉRIFICATEUR DE PRODUIT INDUSTRIEL
+   Pas de lecture d'image (pas de service d'OCR/IA disponible dans
+   un fichier statique) : la photo est un souvenir visuel, la
+   vérification se fait sur le texte des ingrédients tapé à la main,
+   comparé à une liste d'ingrédients à risque en FODMAP.
+   ============================================================ */
+let productScans = [];
+let pendingScanPhoto = null; // dataURL de la photo compressée, ou null
+
+const RISK_KEYWORDS = [
+  {k:"ail", label:"Ail"}, {k:"oignon", label:"Oignon"}, {k:"échalote", label:"Échalote"}, {k:"poireau", label:"Poireau"},
+  {k:"miel", label:"Miel"}, {k:"sirop d'agave", label:"Sirop d'agave"}, {k:"sirop de glucose-fructose", label:"Sirop de glucose-fructose"},
+  {k:"fructose", label:"Fructose"}, {k:"sorbitol", label:"Sorbitol (E420)"}, {k:"mannitol", label:"Mannitol (E421)"},
+  {k:"xylitol", label:"Xylitol"}, {k:"isomalt", label:"Isomalt"}, {k:"maltitol", label:"Maltitol"},
+  {k:"lactose", label:"Lactose"}, {k:"lait en poudre", label:"Lait en poudre"}, {k:"poudre de lait", label:"Poudre de lait"},
+  {k:"chicorée", label:"Chicorée / inuline"}, {k:"inuline", label:"Inuline"}, {k:"extrait de levure", label:"Extrait de levure"},
+  {k:"fos", label:"FOS / oligofructose"}, {k:"blé", label:"Blé"}, {k:"orge", label:"Orge"}, {k:"seigle", label:"Seigle"},
+  {k:"pois chiche", label:"Pois chiche"}, {k:"lentille", label:"Lentille"}, {k:"soja", label:"Soja (farine/protéine)"},
+];
+
+function analyzeIngredients(text){
+  const lower = text.toLowerCase();
+  const flags = [];
+  RISK_KEYWORDS.forEach(r=>{
+    if(lower.includes(r.k) && !flags.includes(r.label)) flags.push(r.label);
+  });
+  return flags;
+}
+
+document.getElementById('scanPhoto').addEventListener('change', (e)=>{
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(){
+    const img = new Image();
+    img.onload = function(){
+      const maxW = 400;
+      const scale = Math.min(1, maxW / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      pendingScanPhoto = canvas.toDataURL('image/jpeg', 0.7);
+      const preview = document.getElementById('scanPreview');
+      preview.src = pendingScanPhoto;
+      document.getElementById('scanPreviewWrap').style.display = 'block';
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('scanForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const name = document.getElementById('scanName').value.trim() || 'Produit sans nom';
+  const ingredientsText = document.getElementById('scanIngredients').value.trim();
+  const flags = analyzeIngredients(ingredientsText);
+
+  productScans.push({
+    id: Date.now(),
+    date: isoDate(today),
+    name,
+    ingredientsText,
+    photo: pendingScanPhoto,
+    flags,
+  });
+  await storeSet(pk('fodmap-product-scans'), JSON.stringify(productScans), true);
+
+  renderScanResult(name, flags);
+  renderScanHistory();
+
+  document.getElementById('scanName').value = '';
+  document.getElementById('scanIngredients').value = '';
+  document.getElementById('scanPhoto').value = '';
+  document.getElementById('scanPreviewWrap').style.display = 'none';
+  pendingScanPhoto = null;
+});
+
+function renderScanResult(name, flags){
+  const el = document.getElementById('scanResult');
+  if(flags.length === 0){
+    el.innerHTML = `
+      <div class="scan-verdict ok">
+        <span class="face low"></span>
+        <div>
+          <div class="sv-title">« ${name} » — rien de suspect repéré</div>
+          <div>Aucun des ingrédients à risque connus n'apparaît dans le texte tapé. Ça ne garantit pas à 100% que le produit est sans FODMAP (tolérance individuelle, quantités, ingrédients non listés ici), mais c'est plutôt bon signe.</div>
+        </div>
+      </div>`;
+  } else {
+    el.innerHTML = `
+      <div class="scan-verdict risky">
+        <span class="face high"></span>
+        <div>
+          <div class="sv-title">« ${name} » — à surveiller</div>
+          <div>Ce produit contient au moins un ingrédient souvent riche en FODMAP :</div>
+          <div class="sv-flags">${flags.map(f=>`<span class="scan-flag">${f}</span>`).join('')}</div>
+        </div>
+      </div>`;
+  }
+}
+
+function renderScanHistory(){
+  const wrap = document.getElementById('scanHistory');
+  if(productScans.length === 0){ wrap.innerHTML = ''; return; }
+  const sorted = [...productScans].sort((a,b)=> b.id - a.id);
+  wrap.innerHTML = sorted.map(s=>`
+    <div class="entry" data-id="${s.id}">
+      ${s.photo ? `<img class="scan-entry-photo" src="${s.photo}" alt="${s.name}">` : '<span class="face sm ' + (s.flags.length ? 'high' : 'low') + '"></span>'}
+      <div class="body">
+        <div class="when" style="width:auto; margin-bottom:2px;">${formatDate(s.date)}</div>
+        <div style="font-weight:600;">${s.name}</div>
+        ${s.flags.length
+          ? `<div class="tags">${s.flags.map(f=>`<span class="tag" style="border-color:var(--danger); color:var(--danger-ink);">${f}</span>`).join('')}</div>`
+          : `<div class="notes">Rien de suspect repéré.</div>`}
+      </div>
+      <button class="del" data-id="${s.id}" title="Supprimer">×</button>
+    </div>`).join('');
+
+  wrap.querySelectorAll('.del').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const id = parseInt(btn.dataset.id, 10);
+      productScans = productScans.filter(s=>s.id !== id);
+      await storeSet(pk('fodmap-product-scans'), JSON.stringify(productScans), true);
+      renderScanHistory();
+    });
+  });
 }
 
 /* ============================================================
@@ -1731,6 +2058,7 @@ function renderReintroSummary(){
     renderMenus();
     renderTests();
     renderJournal();
+    renderScanHistory();
   }
 })();
 </script>
