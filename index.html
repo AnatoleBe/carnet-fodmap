@@ -134,10 +134,10 @@
     nav.tabs button{
       flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
       background:transparent; border:none; border-radius:12px;
-      padding:6px 2px; font-size:0.68rem;
+      padding:6px 1px; font-size:0.6rem;
     }
     nav.tabs button .idx{ display:none; }
-    nav.tabs button .tab-icon{ display:block; font-size:1.25rem; }
+    nav.tabs button .tab-icon{ display:block; font-size:1.15rem; }
     nav.tabs button.active{ background:var(--surface-alt); box-shadow:none; border-bottom:none; }
     nav.tabs button:hover{ transform:none; }
   }
@@ -220,7 +220,19 @@
   .chip.level-chip.moderate.active{ background:var(--accent); border-color:var(--accent); }
   .chip.level-chip.high.active{ background:var(--danger); border-color:var(--danger); }
 
-  .food-count{ font-family:'IBM Plex Mono', monospace; font-size:0.75rem; color:var(--ink-soft); margin-bottom:10px; }
+  .food-item.dislike-item{ cursor:pointer; justify-content:space-between; transition: all .15s ease; }
+  .food-item.dislike-item:hover{ border-color:var(--danger); }
+  .food-item.dislike-item.is-disliked{ background:rgba(181,83,63,0.1); border-color:var(--danger); }
+  .dislike-state{ font-size:0.78rem; font-weight:700; color:var(--ink-soft); white-space:nowrap; }
+  .food-item.dislike-item.is-disliked .dislike-state{ color:var(--danger-ink); }
+  .face-unknown{
+    width:26px; height:26px; border-radius:50%; flex:none; display:inline-block;
+    background:var(--line); position:relative;
+  }
+  .face-unknown::before{
+    content:"?"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:0.8rem; color:var(--ink-soft); font-weight:700;
+  }
 
   .food-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap:10px; }
   .food-item{ display:flex; align-items:center; gap:12px; background:var(--surface-alt); border:1px solid var(--line); border-radius:12px; padding:11px 13px; }
@@ -255,6 +267,16 @@
   }
   .meal-tab-btn .count{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; opacity:0.7; margin-left:4px; }
   .meal-tab-btn.active{ background:var(--forest); color:#fff; border-color:var(--forest); }
+
+  .meal-tabs.course-tabs{ margin-top:-6px; margin-bottom:16px; }
+  .meal-tabs.course-tabs .meal-tab-btn,
+  .course-tab-btn{
+    font-family:'Work Sans', sans-serif; font-weight:600; font-size:0.82rem;
+    background:var(--surface); color:var(--ink-soft); border:1px solid var(--line);
+    border-radius:100px; padding:7px 14px; cursor:pointer; transition: all .15s ease;
+  }
+  .course-tab-btn .count{ font-family:'IBM Plex Mono', monospace; font-size:0.7rem; opacity:0.7; margin-left:4px; }
+  .course-tab-btn.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
   .menu-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:12px; }
   .menu-card{ background:var(--surface-alt); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
   .menu-card-head{ cursor:pointer; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
@@ -413,6 +435,7 @@
     <button class="tab-btn" data-tab="menus"><span class="idx">02</span><span class="tab-icon">🍽️</span>Menus</button>
     <button class="tab-btn" data-tab="journal"><span class="idx">03</span><span class="tab-icon">📓</span>Journal</button>
     <button class="tab-btn" data-tab="reintro"><span class="idx">04</span><span class="tab-icon">🔄</span>Réintroduction</button>
+    <button class="tab-btn" data-tab="dislikes"><span class="idx">05</span><span class="tab-icon">🚫</span>Non appréciés</button>
   </nav>
 
   <!-- ===================== TAB 1 : ALIMENTS ===================== -->
@@ -450,6 +473,7 @@
       </div>
 
       <div class="meal-tabs" id="mealTabs"></div>
+      <div class="meal-tabs course-tabs" id="courseTabs" style="display:none;"></div>
 
       <div class="search-row">
         <input type="search" id="menuSearch" placeholder="Chercher par ingrédient… (ex : poulet, riz, courgette)">
@@ -587,6 +611,26 @@
       <div class="note-box">
         Idéalement, un seul aliment est testé à la fois, sur un fond alimentaire pauvre en FODMAP. Les aliments classés « problématiques » sont automatiquement retirés des menus de l'onglet 02, et ceux classés « OK » font réapparaître de nouvelles propositions de menus qui les contiennent.
       </div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB 5 : ALIMENTS NON APPRÉCIÉS ===================== -->
+  <section class="panel" id="panel-dislikes">
+    <div class="card">
+      <h2 class="panel-title">Aliments non appréciés</h2>
+      <p class="panel-sub">Marque ici tout ce que tu n'aimes pas — les menus des onglets Petit-déjeuner / Déjeuner / Dîner arrêtent aussitôt de le proposer. Ça marche aussi en cliquant directement sur un aliment dans un repas.</p>
+
+      <div class="excluded-panel" id="dislikesExcludedPanel" style="display:none;">
+        <h4>Aliments actuellement écartés</h4>
+        <div class="hint">Clique sur la croix pour le remettre dans les propositions possibles.</div>
+        <div id="dislikesExcludedChips"></div>
+      </div>
+
+      <div class="search-row">
+        <input type="search" id="dislikeSearch" placeholder="Chercher un aliment…">
+      </div>
+      <div class="food-count" id="dislikeCount"></div>
+      <div class="food-grid" id="dislikeGrid"></div>
     </div>
   </section>
 
@@ -1141,6 +1185,65 @@ const DINNERS = [
    recipe:{ingredients:["150 g de bœuf haché","2 pommes de terre","1 carotte","huile d'olive"],
    steps:["Fais cuire les pommes de terre à l'eau puis écrase-les en purée.","Cuis la carotte à la vapeur.","Fais revenir le bœuf haché à la poêle et sers avec la purée et la carotte."]}},
 ];
+
+const STARTERS_LUNCH = [
+  {name:"Salade César revisitée (sans ail, poulet grillé, parmesan)", foods:["poulet","laitue","parmesan"],
+   recipe:{ingredients:["1 blanc de poulet grillé","Laitue romaine","Copeaux de parmesan","Huile d'olive, citron"],
+   steps:["Grille le poulet à la poêle puis coupe-le en lanières.","Dispose la laitue romaine dans un saladier.","Ajoute le poulet, les copeaux de parmesan, un filet d'huile d'olive et de citron."]}},
+  {name:"Salade de tomates, mozzarella et basilic", foods:["tomate","mozzarella","basilic"],
+   recipe:{ingredients:["2 tomates","125 g de mozzarella","Basilic frais","Huile d'olive"],
+   steps:["Coupe les tomates et la mozzarella en tranches.","Alterne les tranches dans une assiette.","Parsème de basilic frais et arrose d'huile d'olive."]}},
+  {name:"Taboulé de quinoa aux herbes et concombre", foods:["quinoa","concombre","persil"],
+   recipe:{ingredients:["100 g de quinoa cuit et refroidi","1/2 concombre","Persil et menthe fraîche","Huile d'olive, citron"],
+   steps:["Coupe le concombre en petits dés.","Mélange avec le quinoa refroidi et les herbes ciselées.","Assaisonne d'huile d'olive et de citron."]}},
+  {name:"Verrine avocat-crevettes", foods:["avocat","crevette","citron"],
+   recipe:{ingredients:["1/8 d'avocat (petite quantité)","100 g de crevettes cuites","Citron, aneth"],
+   steps:["Coupe l'avocat en petits dés.","Dispose en couches avec les crevettes dans un verre.","Termine avec un filet de citron et un peu d'aneth."]}},
+];
+const STARTERS_DINNER = [
+  {name:"Velouté de courgette et parmesan", foods:["courgette","parmesan"],
+   recipe:{ingredients:["2 courgettes","Un peu de crème sans lactose","Parmesan râpé"],
+   steps:["Fais cuire les courgettes coupées en morceaux à l'eau ou à la vapeur.","Mixe avec la crème sans lactose.","Sers chaud avec un peu de parmesan râpé par-dessus."]}},
+  {name:"Carpaccio de saumon, citron et aneth", foods:["saumon","citron","aneth"],
+   recipe:{ingredients:["150 g de saumon frais très frais","Citron, aneth","Huile d'olive"],
+   steps:["Tranche le saumon très finement.","Dispose dans une assiette et arrose d'huile d'olive et de citron.","Parsème d'aneth frais et sers immédiatement bien frais."]}},
+  {name:"Soupe miso légère aux algues", foods:["miso","algues","tofu"],
+   recipe:{ingredients:["1 c. à s. de pâte miso (petite quantité)","Quelques algues wakamé","Tofu ferme en dés"],
+   steps:["Fais chauffer de l'eau sans la faire bouillir fort.","Délaye la pâte miso hors du feu.","Ajoute les algues réhydratées et le tofu en dés."]}},
+  {name:"Bruschetta sans gluten, tomate et basilic", foods:["pain sans gluten","tomate","basilic"],
+   recipe:{ingredients:["2 tranches de pain sans gluten","1 tomate en dés","Basilic frais, huile d'olive"],
+   steps:["Fais griller le pain sans gluten.","Mélange la tomate en dés avec le basilic et l'huile d'olive.","Dépose sur le pain grillé et sers aussitôt."]}},
+];
+
+const DESSERTS_LUNCH = [
+  {name:"Salade de fruits exotiques (ananas, kiwi, fruit de la passion)", foods:["ananas","kiwi","fruit de la passion"],
+   recipe:{ingredients:["Une tranche d'ananas","1 kiwi","1 fruit de la passion"],
+   steps:["Coupe l'ananas et le kiwi en morceaux.","Mélange dans un bol.","Ajoute la pulpe du fruit de la passion par-dessus."]}},
+  {name:"Riz au lait sans lactose à la vanille", foods:["riz","lait sans lactose","vanille"],
+   recipe:{ingredients:["60 g de riz rond","300 ml de lait sans lactose","1 gousse de vanille"],
+   steps:["Fais cuire le riz dans le lait sans lactose avec la vanille fendue, à feu doux 25-30 minutes.","Remue régulièrement pour éviter que ça n'attache.","Laisse tiédir puis réserve au frais avant de servir."]}},
+  {name:"Mousse au chocolat noir (petite quantité)", foods:["chocolat noir","œufs"],
+   recipe:{ingredients:["100 g de chocolat noir 70%+ (petite quantité)","3 œufs","Une pincée de sel"],
+   steps:["Fais fondre le chocolat noir au bain-marie.","Sépare les blancs des jaunes, incorpore les jaunes au chocolat fondu.","Monte les blancs en neige avec le sel et incorpore-les délicatement.","Réserve au frais au moins 3 heures."]}},
+  {name:"Tarte aux fraises, pâte sans gluten", foods:["fraise","pâte sans gluten"],
+   recipe:{ingredients:["1 pâte sablée sans gluten","300 g de fraises","Un peu de sucre"],
+   steps:["Fais cuire la pâte sans gluten à blanc selon les instructions.","Coupe les fraises en tranches.","Dispose sur le fond de tarte refroidi et saupoudre d'un peu de sucre."]}},
+];
+const DESSERTS_DINNER = [
+  {name:"Sorbet maison à l'ananas et citron vert", foods:["ananas","citron vert"],
+   recipe:{ingredients:["300 g d'ananas frais","Un filet de citron vert","Un peu de sucre"],
+   steps:["Mixe l'ananas avec le citron vert et le sucre jusqu'à obtenir une purée lisse.","Verse dans un moule et place au congélateur au moins 4 heures.","Remue une fois à mi-parcours pour une texture plus fine."]}},
+  {name:"Panna cotta sans lactose au coulis de fraise", foods:["crème sans lactose","fraise"],
+   recipe:{ingredients:["300 ml de crème sans lactose","2 feuilles de gélatine","Sucre","Une portion de fraises"],
+   steps:["Fais chauffer la crème sans lactose avec le sucre sans bouillir.","Incorpore la gélatine ramollie et essorée.","Verse dans des petits pots et réserve au frais 4 heures.","Mixe les fraises en coulis et verse par-dessus avant de servir."]}},
+  {name:"Crumble aux myrtilles (flocons d'avoine)", foods:["myrtille","avoine"],
+   recipe:{ingredients:["300 g de myrtilles","40 g de flocons d'avoine","Beurre, sucre roux"],
+   steps:["Dispose les myrtilles dans un petit plat à gratin.","Mélange les flocons d'avoine, le beurre ramolli et le sucre roux du bout des doigts.","Répartis par-dessus et fais cuire au four 20-25 minutes à 180°C."]}},
+  {name:"Yaourt glacé sans lactose, coulis de framboise", foods:["yaourt sans lactose","framboise"],
+   recipe:{ingredients:["200 g de yaourt sans lactose","Une portion de framboises","Sirop d'érable"],
+   steps:["Mixe le yaourt sans lactose avec la moitié des framboises et le sirop d'érable.","Verse dans un moule et place au congélateur 3-4 heures.","Sers avec le reste des framboises fraîches et un coulis mixé."]}},
+];
+
 const BONUS = {
   breakfast: [
     {name:"Tartine de pain de blé, beurre et miel", foods:["pain de blé","beurre","miel"], requires:"pain de blé",
@@ -1368,10 +1471,125 @@ function generateBreakfasts(target, seedOffset){
   return combos;
 }
 
+// ----- Entrées (formats à base de légumes, portions plus légères) -----
+const STARTER_FORMATS = [
+  { id:'veloute_froid',
+    name:(v)=> `Velouté froid de ${v.n}`,
+    ingredients:(v)=> [`300 g de ${v.n}`, "Huile d'olive, citron", "Un peu de crème sans lactose"],
+    steps:(v)=> [`Fais cuire ${v.art}${v.n} coupé(e) en morceaux à l'eau ou à la vapeur.`, `Mixe avec la crème sans lactose jusqu'à obtenir une texture lisse.`, `Laisse refroidir au réfrigérateur et sers avec un filet d'huile d'olive et de citron.`] },
+  { id:'salade_duo',
+    name:(v,v2)=> `Salade de ${v.n} et ${v2.n}`,
+    ingredients:(v,v2)=> [`Une portion de ${v.n}`, `Une portion de ${v2.n}`, "Huile d'olive, vinaigre balsamique"],
+    steps:(v,v2)=> [`Coupe ${v.art}${v.n} et ${v2.art}${v2.n} en fines lamelles.`, `Mélange dans un saladier.`, `Assaisonne d'huile d'olive et de vinaigre balsamique.`] },
+  { id:'carpaccio',
+    name:(v)=> `Carpaccio de ${v.n} au parmesan`,
+    ingredients:(v)=> [`Une portion de ${v.n} très finement tranché(e)`, "Copeaux de parmesan", "Huile d'olive, citron, poivre"],
+    steps:(v)=> [`Tranche ${v.art}${v.n} très finement à la mandoline ou au couteau.`, `Dispose en cercle dans une assiette.`, `Arrose d'huile d'olive et de citron, ajoute les copeaux de parmesan et un tour de poivre.`] },
+  { id:'bruschetta',
+    name:(v)=> `Bruschetta sans gluten, ${v.n} et basilic`,
+    ingredients:(v)=> ["2 tranches de pain sans gluten", `Une portion de ${v.n} en dés`, "Basilic frais, huile d'olive"],
+    steps:(v)=> [`Fais griller les tranches de pain sans gluten.`, `Mélange ${v.art}${v.n} en dés avec le basilic ciselé et un filet d'huile d'olive.`, `Dépose sur le pain grillé et sers aussitôt.`] },
+  { id:'verrine',
+    name:(v,v2)=> `Verrine ${v.n} et ${v2.n}`,
+    ingredients:(v,v2)=> [`Une portion de ${v.n} en petits dés`, `Une portion de ${v2.n} en petits dés`, "Huile d'olive, herbes fraîches"],
+    steps:(v,v2)=> [`Coupe ${v.art}${v.n} et ${v2.art}${v2.n} en très petits dés.`, `Dispose en couches successives dans un petit verre.`, `Termine par un filet d'huile d'olive et quelques herbes fraîches.`] },
+  { id:'terrine',
+    name:(v,v2)=> `Terrine de légumes, ${v.n} et ${v2.n}`,
+    ingredients:(v,v2)=> [`Une portion de ${v.n}`, `Une portion de ${v2.n}`, "3 œufs", "Un peu de crème sans lactose"],
+    steps:(v,v2)=> [`Fais cuire ${v.art}${v.n} et ${v2.art}${v2.n} à la vapeur, puis coupe en morceaux.`, `Mélange avec les œufs battus et la crème sans lactose.`, `Verse dans un moule à cake et fais cuire au four au bain-marie 35-40 min à 180°C.`, `Laisse refroidir avant de démouler et trancher.`] },
+  { id:'soupe_froide',
+    name:(v,v2)=> `Gaspacho de ${v.n} et ${v2.n}`,
+    ingredients:(v,v2)=> [`Une portion de ${v.n}`, `Une portion de ${v2.n}`, "Huile d'olive, vinaigre balsamique, basilic"],
+    steps:(v,v2)=> [`Mixe ${v.art}${v.n} et ${v2.art}${v2.n} avec un filet d'huile d'olive et de vinaigre.`, `Passe éventuellement au chinois pour une texture plus lisse.`, `Réserve au frais au moins 1 heure avant de servir avec du basilic frais.`] },
+];
+function generateStarters(target, seedOffset){
+  const combos = [];
+  const usedNames = new Set();
+  let vi=seedOffset, vi2=seedOffset+7, fi=seedOffset, guard=0;
+  while(combos.length < target && guard < 20000){
+    guard++;
+    const format = STARTER_FORMATS[fi % STARTER_FORMATS.length];
+    const v = GEN_VEGGIES[vi % GEN_VEGGIES.length];
+    const v2 = GEN_VEGGIES[vi2 % GEN_VEGGIES.length];
+    if(v.n === v2.n){ vi2++; continue; }
+    const name = format.name(v, v2);
+    if(!usedNames.has(name)){
+      usedNames.add(name);
+      combos.push({ name, foods: [v.n, v2.n], recipe: { ingredients: format.ingredients(v, v2), steps: format.steps(v, v2) } });
+    }
+    vi++; vi2+=2; fi++;
+  }
+  return combos;
+}
+
+// ----- Desserts (formats à base de fruits pauvres en FODMAP) -----
+const DESSERT_FORMATS = [
+  { id:'salade_fruits',
+    name:(f,f2)=> `Salade de ${f.n} et ${f2.n}`,
+    ingredients:(f,f2)=> [`Une portion de ${f.n}`, `Une portion de ${f2.n}`, "Quelques feuilles de menthe"],
+    steps:(f,f2)=> [`Coupe ${f.art}${f.n} et ${f2.art}${f2.n} en morceaux.`, `Mélange dans un saladier avec la menthe ciselée.`, `Réserve au frais avant de servir.`] },
+  { id:'compote',
+    name:(f)=> `Compote de ${f.n} maison`,
+    ingredients:(f)=> [`200 g de ${f.n}`, "Un filet de sirop d'érable (optionnel)", "Un peu d'eau"],
+    steps:(f)=> [`Fais cuire ${f.art}${f.n} coupé(e) en morceaux avec un fond d'eau, à feu doux 10-15 minutes.`, `Écrase à la fourchette ou mixe selon la texture voulue.`, `Sucre légèrement au sirop d'érable si besoin.`] },
+  { id:'riz_au_lait',
+    name:(f)=> `Riz au lait sans lactose et ${f.n}`,
+    ingredients:(f)=> ["60 g de riz rond", "300 ml de lait sans lactose", "1 gousse de vanille ou extrait", `Une portion de ${f.n}`],
+    steps:(f)=> [`Fais cuire le riz dans le lait sans lactose avec la vanille, à feu doux 25-30 minutes en remuant.`, `Laisse tiédir puis réserve au frais.`, `Sers avec ${f.art}${f.n} coupé(e) en morceaux.`] },
+  { id:'sorbet',
+    name:(f)=> `Sorbet maison au ${f.n}`,
+    ingredients:(f)=> [`300 g de ${f.n} bien mûr(e)`, "Un filet de citron", "Un peu de sucre ou sirop d'érable"],
+    steps:(f)=> [`Mixe ${f.art}${f.n} avec le citron et le sucre jusqu'à obtenir une purée lisse.`, `Verse dans un moule et place au congélateur au moins 4 heures, en remuant une fois à mi-parcours.`, `Sors quelques minutes avant de servir pour faciliter le service.`] },
+  { id:'crumble',
+    name:(f)=> `Crumble de ${f.n} (flocons d'avoine)`,
+    ingredients:(f)=> [`Une portion de ${f.n}`, "40 g de flocons d'avoine", "Beurre, sucre roux"],
+    steps:(f)=> [`Dispose ${f.art}${f.n} coupé(e) en morceaux dans un petit plat à gratin.`, `Mélange les flocons d'avoine, le beurre ramolli et le sucre roux du bout des doigts pour former un crumble grossier.`, `Répartis par-dessus le fruit et fais cuire au four 20-25 minutes à 180°C.`] },
+  { id:'panna_cotta',
+    name:(f)=> `Panna cotta sans lactose, coulis de ${f.n}`,
+    ingredients:(f)=> ["300 ml de crème de coco ou lait sans lactose", "2 feuilles de gélatine", "Sucre", `Une portion de ${f.n} pour le coulis`],
+    steps:(f)=> [`Fais chauffer la crème avec le sucre sans bouillir, puis incorpore la gélatine ramollie.`, `Verse dans des petits pots et réserve au frais au moins 4 heures.`, `Mixe ${f.art}${f.n} en coulis et verse par-dessus au moment de servir.`] },
+  { id:'yaourt_glace',
+    name:(f)=> `Yaourt sans lactose glacé, ${f.n}`,
+    ingredients:(f)=> ["200 g de yaourt sans lactose", `Une portion de ${f.n}`, "Un filet de sirop d'érable"],
+    steps:(f)=> [`Mixe le yaourt sans lactose avec ${f.art}${f.n} et le sirop d'érable.`, `Verse dans un moule et place au congélateur 3-4 heures.`, `Laisse tempérer quelques minutes avant de servir.`] },
+];
+function generateDesserts(target, seedOffset){
+  const combos = [];
+  const usedNames = new Set();
+  let fi2=seedOffset, fi3=seedOffset+5, fmi=seedOffset, guard=0;
+  while(combos.length < target && guard < 20000){
+    guard++;
+    const format = DESSERT_FORMATS[fmi % DESSERT_FORMATS.length];
+    const f = GEN_BFAST_FRUITS[fi2 % GEN_BFAST_FRUITS.length];
+    const f2 = GEN_BFAST_FRUITS[fi3 % GEN_BFAST_FRUITS.length];
+    let name, foods;
+    if(format.id === 'salade_fruits'){
+      if(f.n === f2.n){ fi3++; continue; }
+      name = format.name(f, f2);
+      foods = [f.n, f2.n];
+    } else {
+      name = format.name(f);
+      foods = [f.n];
+    }
+    if(!usedNames.has(name)){
+      usedNames.add(name);
+      const ing = format.id === 'salade_fruits' ? format.ingredients(f, f2) : format.ingredients(f);
+      const st = format.id === 'salade_fruits' ? format.steps(f, f2) : format.steps(f);
+      combos.push({ name, foods, recipe: { ingredients: ing, steps: st } });
+    }
+    fi2++; fi3+=2; fmi++;
+  }
+  return combos;
+}
+
 try{
   LUNCHES.push(...generateMainMeals(Math.max(0, 300 - LUNCHES.length), 0));
   DINNERS.push(...generateMainMeals(Math.max(0, 300 - DINNERS.length), 4));
   BREAKFASTS.push(...generateBreakfasts(Math.max(0, 80 - BREAKFASTS.length), 0));
+  STARTERS_LUNCH.push(...generateStarters(Math.max(0, 100 - STARTERS_LUNCH.length), 0));
+  STARTERS_DINNER.push(...generateStarters(Math.max(0, 100 - STARTERS_DINNER.length), 4));
+  DESSERTS_LUNCH.push(...generateDesserts(Math.max(0, 100 - DESSERTS_LUNCH.length), 0));
+  DESSERTS_DINNER.push(...generateDesserts(Math.max(0, 100 - DESSERTS_DINNER.length), 4));
 }catch(e){ console.error('Erreur génération de menus :', e); }
 
 function isMealAllowed(meal){
@@ -1381,15 +1599,25 @@ function isMealAllowed(meal){
   return true;
 }
 
-function poolFor(slot){
-  const base = slot==='breakfast' ? BREAKFASTS : slot==='lunch' ? LUNCHES : DINNERS;
-  const bonus = BONUS[slot].filter(isMealAllowed);
+const MEAL_POOLS = {
+  breakfast: { main: BREAKFASTS },
+  lunch: { starter: STARTERS_LUNCH, main: LUNCHES, dessert: DESSERTS_LUNCH },
+  dinner: { starter: STARTERS_DINNER, main: DINNERS, dessert: DESSERTS_DINNER },
+};
+const COURSE_LABELS = { starter: '🥗 Entrée', main: '🍲 Plat', dessert: '🍰 Dessert' };
+const COURSE_ORDER = ['starter', 'main', 'dessert'];
+
+function poolFor(slot, course){
+  course = course || 'main';
+  const base = (MEAL_POOLS[slot] && MEAL_POOLS[slot][course]) || [];
+  const bonus = (course === 'main' && BONUS[slot]) ? BONUS[slot].filter(isMealAllowed) : [];
   return [...base.filter(isMealAllowed), ...bonus];
 }
 
-function renderExcludedPanel(){
-  const panel = document.getElementById('excludedPanel');
-  const chipsEl = document.getElementById('excludedChips');
+function renderExcludedChipsInto(panelId, chipsId){
+  const panel = document.getElementById(panelId);
+  const chipsEl = document.getElementById(chipsId);
+  if(!panel || !chipsEl) return;
   if(dislikedFoods.size === 0){ panel.style.display = 'none'; return; }
   panel.style.display = 'block';
   chipsEl.innerHTML = [...dislikedFoods].sort().map(f=>`
@@ -1403,6 +1631,13 @@ function renderExcludedPanel(){
       renderMenus();
     });
   });
+}
+
+function renderExcludedPanel(){
+  renderExcludedChipsInto('excludedPanel', 'excludedChips');
+  renderExcludedChipsInto('dislikesExcludedPanel', 'dislikesExcludedChips');
+  const grid = document.getElementById('dislikeGrid');
+  if(grid) renderDislikeGrid();
 }
 
 async function toggleDislike(food){
@@ -1429,11 +1664,14 @@ const MEAL_SECTIONS = [
   {key:'dinner', label:'🌙 Dîner'},
 ];
 let activeMealSlot = 'breakfast';
+let activeCourse = 'main';
 
 function renderMealTabs(){
   const wrap = document.getElementById('mealTabs');
   wrap.innerHTML = MEAL_SECTIONS.map(sec=>{
-    const count = poolFor(sec.key).length;
+    const count = sec.key==='breakfast'
+      ? poolFor(sec.key, 'main').length
+      : COURSE_ORDER.reduce((sum,c)=> sum + poolFor(sec.key, c).length, 0);
     return `<button class="meal-tab-btn ${activeMealSlot===sec.key?'active':''}" data-slot="${sec.key}">${sec.label} <span class="count">(${count})</span></button>`;
   }).join('');
   wrap.querySelectorAll('.meal-tab-btn').forEach(btn=>{
@@ -1444,14 +1682,32 @@ function renderMealTabs(){
   });
 }
 
+function renderCourseTabs(){
+  const wrap = document.getElementById('courseTabs');
+  const show = activeMealSlot !== 'breakfast';
+  wrap.style.display = show ? 'flex' : 'none';
+  if(!show) return;
+  wrap.innerHTML = COURSE_ORDER.map(c=>{
+    const count = poolFor(activeMealSlot, c).length;
+    return `<button class="course-tab-btn ${activeCourse===c?'active':''}" data-course="${c}">${COURSE_LABELS[c]} <span class="count">(${count})</span></button>`;
+  }).join('');
+  wrap.querySelectorAll('.course-tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      activeCourse = btn.dataset.course;
+      renderMenus();
+    });
+  });
+}
+
 function renderMenus(){
   renderMealTabs();
+  renderCourseTabs();
   const query = document.getElementById('menuSearch').value.trim().toLowerCase();
   const wrap = document.getElementById('menuList');
   const countEl = document.getElementById('menuCount');
-  const sec = MEAL_SECTIONS.find(s=>s.key===activeMealSlot);
+  const course = activeMealSlot === 'breakfast' ? 'main' : activeCourse;
 
-  let pool = poolFor(sec.key);
+  let pool = poolFor(activeMealSlot, course);
   const totalEligible = pool.length;
   if(query){
     pool = pool.filter(m=> m.name.toLowerCase().includes(query) || m.foods.some(f=>f.toLowerCase().includes(query)));
@@ -1462,7 +1718,7 @@ function renderMenus(){
     : `${totalEligible} proposition${totalEligible>1?'s':''}`;
 
   const cardsHtml = pool.length ? pool.map((meal, idx)=>`
-      <div class="menu-card" data-slot="${sec.key}" data-idx="${idx}">
+      <div class="menu-card" data-slot="${activeMealSlot}" data-idx="${idx}">
         <div class="menu-card-head">
           <div class="menu-card-name">${meal.name}</div>
           <div class="menu-card-toggle">Voir la recette ▾</div>
@@ -1474,7 +1730,7 @@ function renderMenus(){
       </div>`).join('')
     : (query
         ? `<div class="empty-state">Aucun repas ne correspond à « ${query} » dans cette catégorie.</div>`
-        : "<div class=\"empty-state\">Trop d'aliments exclus pour proposer une idée ici — pense à en réintégrer certains dans le bandeau ci-dessus.</div>");
+        : "<div class=\"empty-state\">Trop d'aliments exclus pour proposer une idée ici — pense à en réintégrer certains dans le bandeau ci-dessus ou dans l'onglet « Non appréciés ».</div>");
 
   wrap.innerHTML = `<div class="menu-section"><div class="menu-grid">${cardsHtml}</div></div>`;
 
@@ -2032,6 +2288,57 @@ function renderReintroSummary(){
       <div class="wmeta">testé le ${formatDate(t.start)}</div>
     </div>`).join('') : '<div class="hint">Aucun aliment réintégré pour le moment.</div>';
 }
+
+/* ============================================================
+   TAB 5 — ALIMENTS NON APPRÉCIÉS
+   Reprend TOUS les ingrédients utilisés dans les recettes (peu
+   importe l'onglet) + la base FODMAP, pour que le clic corresponde
+   toujours exactement à ce qui filtre les menus.
+   ============================================================ */
+function buildDislikeUniverse(){
+  const set = new Set();
+  const allPools = [
+    ...BREAKFASTS, ...LUNCHES, ...DINNERS,
+    ...STARTERS_LUNCH, ...STARTERS_DINNER, ...DESSERTS_LUNCH, ...DESSERTS_DINNER,
+    ...BONUS.breakfast, ...BONUS.lunch, ...BONUS.dinner,
+  ];
+  allPools.forEach(m=> m.foods.forEach(f=> set.add(normalizeFood(f))));
+  FOODS.forEach(f=> set.add(normalizeFood(f.n)));
+  return [...set].sort((a,b)=> a.localeCompare(b, 'fr'));
+}
+
+function renderDislikeGrid(){
+  const searchEl = document.getElementById('dislikeSearch');
+  const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  const universe = buildDislikeUniverse();
+  const filtered = universe.filter(name=> !q || name.includes(q));
+
+  document.getElementById('dislikeCount').textContent = `${filtered.length} aliment${filtered.length>1?'s':''}`;
+
+  const grid = document.getElementById('dislikeGrid');
+  if(filtered.length === 0){
+    grid.innerHTML = '<div class="empty-state">Aucun aliment ne correspond — essaie un autre mot.</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(name=>{
+    const info = getFoodInfo(name);
+    const isDisliked = dislikedFoods.has(name);
+    return `
+    <div class="food-item dislike-item ${isDisliked ? 'is-disliked' : ''}" data-food="${name}">
+      ${info ? `<span class="face ${info.l}"></span>` : `<span class="face-unknown"></span>`}
+      <div class="meta">
+        <div class="name">${capFirst(name)}</div>
+        <div class="cat">${info ? info.c : 'Ingrédient de recette'}</div>
+      </div>
+      <span class="dislike-state">${isDisliked ? '❌ Écarté' : '🤍 Aimé'}</span>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.dislike-item').forEach(card=>{
+    card.addEventListener('click', ()=> toggleDislike(card.dataset.food));
+  });
+}
+document.getElementById('dislikeSearch').addEventListener('input', renderDislikeGrid);
 
 /* ============================================================
    INIT
