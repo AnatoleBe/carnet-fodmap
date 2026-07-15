@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Mon Carnet FODMAP</title>
+<meta name="theme-color" content="#2F4B3C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Carnet FODMAP">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232F4B3C'/%3E%3Ccircle cx='50' cy='52' r='30' fill='%236E8B5A'/%3E%3Ccircle cx='39' cy='46' r='4.2' fill='white'/%3E%3Ccircle cx='61' cy='46' r='4.2' fill='white'/%3E%3Cpath d='M37 60 Q50 74 63 60' stroke='white' stroke-width='4.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232F4B3C'/%3E%3Ccircle cx='50' cy='52' r='30' fill='%236E8B5A'/%3E%3Ccircle cx='39' cy='46' r='4.2' fill='white'/%3E%3Ccircle cx='61' cy='46' r='4.2' fill='white'/%3E%3Cpath d='M37 60 Q50 74 63 60' stroke='white' stroke-width='4.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#EFF3EA;
+    --surface:#FFFFFF;
+    --surface-alt:#F7F6EE;
+    --ink:#233229;
+    --ink-soft:#5B6B60;
+    --forest:#2F4B3C;
+    --success:#6E8B5A;
+    --success-ink:#3F5233;
+    --accent:#E3A542;
+    --accent-ink:#8A5E15;
+    --danger:#B5533F;
+    --danger-ink:#7A3225;
+    --line:#DCDBC9;
+    --card-shadow: 0 1px 0 rgba(35,50,41,0.04), 0 8px 20px -12px rgba(35,50,41,0.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Work Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  ::selection{ background:var(--accent); color:#fff; }
+
+  .shell{ max-width: 980px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  header.hero{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:20px;
+    padding: 6px 4px 22px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 22px;
+  }
+  header.hero .title-block h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size: 2.3rem;
+    line-height:1.05;
+    margin:0 0 6px;
+    color:var(--forest);
+    letter-spacing:-0.01em;
+  }
+  header.hero .title-block p{
+    margin:0; color:var(--ink-soft); font-size:0.98rem; max-width:48ch;
+  }
+  header.hero .badge{
+    flex:none;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--forest);
+    background:var(--surface);
+    border:1px solid var(--line);
+    padding:8px 12px;
+    border-radius:100px;
+    box-shadow: var(--card-shadow);
+    white-space:nowrap;
+  }
+
+  .profile-bar{
+    background:var(--surface-alt); border:1px solid var(--line); border-radius:12px;
+    padding:12px 16px; margin-bottom:18px;
+  }
+  .profile-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .profile-label{ font-weight:600; font-size:0.9rem; color:var(--ink); white-space:nowrap; }
+  .profile-choice{
+    font-family:'Work Sans', sans-serif; font-weight:700; font-size:0.9rem;
+    background:var(--surface); color:var(--forest); border:1px solid var(--line);
+    border-radius:100px; padding:9px 20px; cursor:pointer; transition: all .15s ease;
+  }
+  .profile-choice.active{ background:var(--forest); color:#fff; border-color:var(--forest); }
+  .profile-meta{ margin-top:8px; display:flex; flex-direction:column; gap:2px; }
+  .profile-meta #profileCurrent{ font-weight:700; font-size:0.85rem; color:var(--forest); }
+  .profile-hint{ font-size:0.78rem; color:var(--ink-soft); }
+
+  nav.tabs{ display:flex; gap:10px; margin-bottom:26px; flex-wrap:wrap; }
+  nav.tabs button{
+    font-family:'Work Sans', sans-serif;
+    font-weight:600;
+    font-size:0.92rem;
+    color:var(--ink-soft);
+    background:var(--surface-alt);
+    border:1px solid var(--line);
+    border-radius:12px 12px 4px 4px;
+    padding:12px 18px 11px;
+    cursor:pointer;
+    position:relative;
+    transition: transform .15s ease, background .15s ease, color .15s ease, box-shadow .15s ease;
+  }
+  nav.tabs button .idx{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    opacity:0.55;
+    margin-right:8px;
+  }
+  nav.tabs button .tab-icon{ display:none; }
+  nav.tabs button:hover{ transform: translateY(-2px); }
+  nav.tabs button.active{
+    background:var(--surface);
+    color:var(--forest);
+    box-shadow: var(--card-shadow);
+    border-bottom:3px solid var(--forest);
+  }
+
+  /* App mobile : barre d'onglets fixée en bas de l'écran, comme une appli */
+  @media (max-width: 700px){
+    html{ -webkit-tap-highlight-color: transparent; }
+    input, textarea, select{ font-size:16px; } /* évite le zoom automatique iOS */
+    .shell{ padding-bottom: 96px; }
+    nav.tabs{
+      position:fixed; left:0; right:0; bottom:0; margin:0; z-index:50;
+      background:var(--surface); border-top:1px solid var(--line);
+      border-radius:0; box-shadow: 0 -6px 18px -8px rgba(35,50,41,0.18);
+      padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+      gap:2px;
+    }
+    nav.tabs button{
+      flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+      background:transparent; border:none; border-radius:12px;
+      padding:6px 2px; font-size:0.68rem;
+    }
+    nav.tabs button .idx{ display:none; }
+    nav.tabs button .tab-icon{ display:block; font-size:1.25rem; }
+    nav.tabs button.active{ background:var(--surface-alt); box-shadow:none; border-bottom:none; }
+    nav.tabs button:hover{ transform:none; }
+  }
+
+  section.panel{ display:none; animation: fade .25s ease; }
+  section.panel.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    box-shadow: var(--card-shadow);
+    padding: 20px 22px;
+  }
+
+  h2.panel-title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.5rem;
+    color:var(--forest);
+    margin: 0 0 4px;
+  }
+  p.panel-sub{ color:var(--ink-soft); margin:0 0 18px; font-size:0.94rem; }
+
+  /* ---------- bonhomme face motif ---------- */
+  .face{ width:26px; height:26px; border-radius:50%; position:relative; flex:none; display:inline-block; }
+  .face.low{ background:var(--success); }
+  .face.moderate{ background:var(--accent); }
+  .face.high{ background:var(--danger); }
+  .face::before{
+    content:""; position:absolute; top:34%; left:29%;
+    width:3.5px; height:3.5px; border-radius:50%; background:rgba(0,0,0,0.55);
+    box-shadow: 10px 0 0 rgba(0,0,0,0.55);
+  }
+  .face.low::after{
+    content:""; position:absolute; left:50%; bottom:24%; width:11px; height:6px;
+    transform:translateX(-50%); border-bottom:2.4px solid rgba(0,0,0,0.55); border-radius:0 0 10px 10px;
+  }
+  .face.moderate::after{
+    content:""; position:absolute; left:50%; bottom:27%; width:11px; height:2.4px;
+    transform:translateX(-50%); background:rgba(0,0,0,0.55); border-radius:2px;
+  }
+  .face.high::after{
+    content:""; position:absolute; left:50%; bottom:16%; width:11px; height:6px;
+    transform:translateX(-50%); border-top:2.4px solid rgba(0,0,0,0.55); border-radius:10px 10px 0 0;
+  }
+  .face.sm{ width:20px; height:20px; }
+  .face.sm::before{ top:32%; left:27%; width:3px; height:3px; box-shadow:7.5px 0 0 rgba(0,0,0,0.55); }
+  .face.sm.low::after{ width:8px; height:4px; bottom:22%; border-bottom-width:2px; }
+  .face.sm.moderate::after{ width:8px; height:2px; bottom:26%; }
+  .face.sm.high::after{ width:8px; height:4px; bottom:16%; border-top-width:2px; }
+
+  .legend{ display:flex; gap:18px; flex-wrap:wrap; margin-bottom:18px; font-size:0.86rem; color:var(--ink-soft); }
+  .legend .item{ display:flex; align-items:center; gap:8px; }
+
+  .search-row{ display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  input[type="search"], input[type="text"], input[type="number"], textarea, input[type="date"], select{
+    font-family:'Work Sans', sans-serif;
+    border:1px solid var(--line);
+    background:var(--surface-alt);
+    border-radius:10px;
+    padding:11px 14px;
+    font-size:0.95rem;
+    color:var(--ink);
+    width:100%;
+  }
+  input[type="search"]{ flex:1; min-width:200px; width:auto; }
+  input:focus, textarea:focus, select:focus{
+    outline:2px solid var(--accent); outline-offset:1px; background:var(--surface);
+  }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
+  .chip{
+    font-size:0.82rem; padding:7px 13px; border-radius:100px;
+    border:1px solid var(--line); background:var(--surface-alt); color:var(--ink-soft);
+    cursor:pointer; user-select:none; transition: all .15s ease;
+  }
+  .chip.active{ background:var(--forest); color:#fff; border-color:var(--forest); }
+  .chip.level-chip.low.active{ background:var(--success); border-color:var(--success); }
+  .chip.level-chip.moderate.active{ background:var(--accent); border-color:var(--accent); }
+  .chip.level-chip.high.active{ background:var(--danger); border-color:var(--danger); }
+
+  .food-count{ font-family:'IBM Plex Mono', monospace; font-size:0.75rem; color:var(--ink-soft); margin-bottom:10px; }
+
+  .food-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap:10px; }
+  .food-item{ display:flex; align-items:center; gap:12px; background:var(--surface-alt); border:1px solid var(--line); border-radius:12px; padding:11px 13px; }
+  .food-item .meta{ min-width:0; }
+  .food-item .name{ font-weight:600; font-size:0.93rem; line-height:1.25; }
+  .food-item .cat{ font-size:0.74rem; color:var(--ink-soft); }
+  .food-item .note{ font-size:0.74rem; color:var(--accent-ink); margin-top:2px; }
+  .empty-state{ text-align:center; padding:32px 10px; color:var(--ink-soft); }
+
+  /* ---------- menu tab ---------- */
+  .excluded-panel{
+    background:var(--surface-alt); border:1px solid var(--line); border-radius:12px;
+    padding:14px 16px; margin-bottom:20px;
+  }
+  .excluded-panel h4{ margin:0 0 8px; font-size:0.85rem; color:var(--ink-soft); font-weight:700; text-transform:uppercase; letter-spacing:0.03em; }
+  .excluded-panel .hint{ font-size:0.82rem; color:var(--ink-soft); margin-bottom:10px; }
+  .excl-chip{
+    display:inline-flex; align-items:center; gap:6px; background:var(--danger); color:#fff;
+    border-radius:100px; padding:5px 6px 5px 12px; font-size:0.8rem; margin:0 6px 6px 0;
+  }
+  .excl-chip button{ background:rgba(255,255,255,0.25); border:none; color:#fff; border-radius:50%; width:18px; height:18px; cursor:pointer; font-size:0.75rem; line-height:1; }
+
+  .menu-section{ margin-bottom:28px; }
+  .menu-section-title{ font-family:'Fraunces', serif; color:var(--forest); font-size:1.2rem; margin:0 0 12px; display:flex; align-items:baseline; gap:8px; }
+  .menu-section-title .count{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--ink-soft); font-weight:400; }
+
+  .meal-tabs{ display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .meal-tab-btn{
+    font-family:'Work Sans', sans-serif; font-weight:600; font-size:0.88rem;
+    background:var(--surface-alt); color:var(--ink-soft); border:1px solid var(--line);
+    border-radius:100px; padding:9px 16px; cursor:pointer; transition: all .15s ease;
+  }
+  .meal-tab-btn .count{ font-family:'IBM Plex Mono', monospace; font-size:0.72rem; opacity:0.7; margin-left:4px; }
+  .meal-tab-btn.active{ background:var(--forest); color:#fff; border-color:var(--forest); }
+  .menu-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:12px; }
+  .menu-card{ background:var(--surface-alt); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  .menu-card-head{ cursor:pointer; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .menu-card-name{ font-weight:600; font-size:0.94rem; line-height:1.3; }
+  .menu-card-toggle{ flex:none; font-size:0.74rem; color:var(--forest); font-weight:600; white-space:nowrap; margin-top:2px; }
+  .ing-row{ display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+  .ing-chip{
+    font-size:0.75rem; padding:4px 10px; border-radius:100px; border:1px solid var(--line);
+    background:var(--surface); color:var(--ink-soft); cursor:pointer; user-select:none;
+    transition: all .15s ease;
+  }
+  .ing-chip:hover{ border-color:var(--danger); color:var(--danger-ink); }
+  .ing-chip.disliked{ background:var(--danger); color:#fff; border-color:var(--danger); text-decoration:line-through; }
+  .recipe-body{ margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); font-size:0.86rem; }
+  .recipe-body h5{ margin:0 0 6px; font-size:0.76rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); }
+  .recipe-body ul, .recipe-body ol{ margin:0 0 12px; padding-left:18px; }
+  .recipe-body li{ margin-bottom:4px; }
+  .menu-hint{ font-size:0.82rem; color:var(--ink-soft); margin-bottom:16px; }
+
+  /* ---------- journal tab ---------- */
+  .journal-form{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:8px; }
+  .journal-form .full{ grid-column: 1 / -1; }
+  label{ display:block; font-size:0.8rem; font-weight:600; color:var(--ink-soft); margin-bottom:6px; }
+  input[type="range"]{ width:100%; accent-color:var(--forest); }
+  .pain-live{ display:flex; align-items:center; gap:10px; margin-top:8px; }
+  .pain-live span{ font-size:0.85rem; color:var(--ink-soft); }
+  button.primary{
+    font-family:'Work Sans', sans-serif; font-weight:700; font-size:0.94rem;
+    background:var(--forest); color:#fff; border:none; border-radius:10px;
+    padding:12px 20px; cursor:pointer; transition: transform .15s ease, background .15s ease;
+  }
+  button.primary:hover{ background:#25392d; transform: translateY(-1px); }
+  button.secondary{
+    font-family:'Work Sans', sans-serif; font-weight:600; font-size:0.85rem;
+    background:var(--surface); color:var(--forest); border:1px solid var(--line); border-radius:8px;
+    padding:8px 14px; cursor:pointer; transition: all .15s ease;
+  }
+  button.secondary:hover{ border-color:var(--forest); }
+  button.danger-outline{
+    font-family:'Work Sans', sans-serif; font-weight:600; font-size:0.85rem;
+    background:var(--surface); color:var(--danger-ink); border:1px solid var(--danger); border-radius:8px;
+    padding:8px 14px; cursor:pointer;
+  }
+
+  .entries{ margin-top:24px; display:flex; flex-direction:column; gap:10px; }
+  .entry{ background:var(--surface-alt); border:1px solid var(--line); border-radius:12px; padding:14px 16px; display:flex; gap:14px; align-items:flex-start; }
+  .entry .when{ flex:none; width:92px; font-family:'IBM Plex Mono', monospace; font-size:0.75rem; color:var(--ink-soft); }
+  .entry .body{ flex:1; min-width:0; }
+  .entry .tags{ display:flex; flex-wrap:wrap; gap:6px; margin:4px 0; }
+  .tag{ background:var(--surface); border:1px solid var(--line); border-radius:100px; padding:3px 10px; font-size:0.76rem; }
+  .entry .notes{ font-size:0.85rem; color:var(--ink-soft); margin-top:4px; }
+  .entry .del{ flex:none; background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:1.1rem; line-height:1; padding:4px; }
+  .entry .del:hover{ color:var(--danger); }
+
+  .watch-list{ margin-top:26px; }
+  .watch-list h3{ font-family:'Fraunces', serif; color:var(--forest); font-size:1.1rem; margin:0 0 4px; }
+  .watch-list .hint{ font-size:0.82rem; color:var(--ink-soft); margin-bottom:12px; }
+  .watch-item{ display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); }
+  .watch-item:last-child{ border-bottom:none; }
+  .watch-item .wname{ flex:1; font-weight:600; font-size:0.9rem; text-transform:capitalize; }
+  .watch-item .wmeta{ font-family:'IBM Plex Mono', monospace; font-size:0.75rem; color:var(--ink-soft); }
+
+  .note-box{
+    background:var(--surface-alt); border-left:3px solid var(--accent);
+    border-radius:0 10px 10px 0; padding:12px 16px; font-size:0.84rem; color:var(--ink-soft);
+    margin-top:20px;
+  }
+
+  /* ---------- reintro tab ---------- */
+  .food-picker{ position:relative; }
+  .food-picker-results{
+    position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--surface);
+    border:1px solid var(--line); border-radius:10px; max-height:230px; overflow-y:auto;
+    z-index:30; box-shadow: var(--card-shadow); display:none;
+  }
+  .food-picker-results.show{ display:block; }
+  .fp-item{ display:flex; align-items:center; gap:10px; padding:8px 12px; cursor:pointer; font-size:0.88rem; }
+  .fp-item:hover{ background:var(--surface-alt); }
+  .fp-item .fp-cat{ margin-left:auto; font-size:0.72rem; color:var(--ink-soft); }
+
+  .test-card{ background:var(--surface-alt); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:14px; }
+  .test-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+  .test-head .tname-row{ display:flex; align-items:center; gap:8px; }
+  .test-head .tname{ font-family:'Fraunces', serif; font-weight:600; font-size:1.05rem; color:var(--forest); text-transform:capitalize; }
+  .test-head .trange{ font-family:'IBM Plex Mono', monospace; font-size:0.75rem; color:var(--ink-soft); }
+  .status-badge{ font-size:0.72rem; font-weight:700; padding:4px 11px; border-radius:100px; text-transform:uppercase; letter-spacing:0.03em; }
+  .status-badge.active{ background:var(--accent); color:#fff; }
+  .status-badge.ok{ background:var(--success); color:#fff; }
+  .status-badge.problem{ background:var(--danger); color:#fff; }
+  .test-days{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
+  .test-day{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:8px 10px; width:110px; }
+  .test-day .tdate{ font-family:'IBM Plex Mono', monospace; font-size:0.68rem; color:var(--ink-soft); margin-bottom:5px; }
+  .test-day input[type="number"]{ width:100%; padding:6px 8px; font-size:0.85rem; }
+  .test-day.future{ opacity:0.45; }
+  .test-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .reintro-form{ display:grid; grid-template-columns: 2fr 1fr 1fr; gap:14px; align-items:end; }
+  .reintro-form .full{ grid-column: 1/-1; }
+  .summary-cols{ display:grid; grid-template-columns: 1fr 1fr; gap:24px; margin-top:26px; }
+  .test-recipes{ border-top:1px dashed var(--line); padding-top:12px; }
+  .test-recipes h5{ margin:0 0 8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink-soft); }
+  .mini-recipe-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:10px; }
+  .mini-recipe{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 12px; cursor:pointer; }
+  .mini-recipe .mr-name{ font-weight:600; font-size:0.85rem; }
+  .mini-recipe .mr-toggle{ font-size:0.7rem; color:var(--forest); margin-top:2px; }
+  .mini-recipe .recipe-body{ font-size:0.8rem; }
+  @media (max-width:700px){ .summary-cols{ grid-template-columns: 1fr; } .reintro-form{ grid-template-columns: 1fr; } }
+
+  footer{ text-align:center; color:var(--ink-soft); font-size:0.78rem; margin-top:40px; }
+
+  @media (max-width: 600px){
+    .journal-form{ grid-template-columns: 1fr; }
+    header.hero{ flex-direction:column; align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="hero">
+    <div class="title-block">
+      <h1>Mon Carnet FODMAP</h1>
+      <p>Comprendre ce qu'on mange, planifier sans y penser, et écouter ce que dit le ventre — même pendant la réintroduction.</p>
+    </div>
+    <div class="badge">D'après les recherches Monash University</div>
+  </header>
+
+  <div class="profile-bar">
+    <div class="profile-row">
+      <span class="profile-label">👤 Qui utilise le carnet ?</span>
+      <button type="button" class="profile-choice" data-profile="patrick">Patrick</button>
+      <button type="button" class="profile-choice" data-profile="agathe">Agathe</button>
+    </div>
+    <div class="profile-meta">
+      <span id="profileCurrent">Choisis ton prénom pour charger tes propres données</span>
+      <span class="profile-hint">Ce lien est partagé entre vous deux : chaque prénom garde ses propres goûts, son propre journal et ses propres tests, séparés de l'autre.</span>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="foods"><span class="idx">01</span><span class="tab-icon">🍏</span>Aliments</button>
+    <button class="tab-btn" data-tab="menus"><span class="idx">02</span><span class="tab-icon">🍽️</span>Menus</button>
+    <button class="tab-btn" data-tab="journal"><span class="idx">03</span><span class="tab-icon">📓</span>Journal</button>
+    <button class="tab-btn" data-tab="reintro"><span class="idx">04</span><span class="tab-icon">🔄</span>Réintroduction</button>
+  </nav>
+
+  <!-- ===================== TAB 1 : ALIMENTS ===================== -->
+  <section class="panel active" id="panel-foods">
+    <div class="card">
+      <h2 class="panel-title">Le feu vert ou le feu rouge</h2>
+      <p class="panel-sub">Cherche un aliment pour savoir tout de suite si son ventre l'apprécie ou non.</p>
+
+      <div class="legend">
+        <div class="item"><span class="face low sm"></span> Faible en FODMAP — feu vert</div>
+        <div class="item"><span class="face moderate sm"></span> À portion limitée</div>
+        <div class="item"><span class="face high sm"></span> Riche en FODMAP — à éviter</div>
+      </div>
+
+      <div class="search-row">
+        <input type="search" id="foodSearch" placeholder="Rechercher un aliment… (ex : ail, riz, pomme)">
+      </div>
+      <div class="chips" id="levelChips"></div>
+      <div class="chips" id="catChips"></div>
+      <div class="food-count" id="foodCount"></div>
+      <div class="food-grid" id="foodGrid"></div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB 2 : MENUS ===================== -->
+  <section class="panel" id="panel-menus">
+    <div class="card">
+      <h2 class="panel-title">Idées de menus</h2>
+      <p class="panel-sub" id="menuSub">Un maximum d'idées faibles en FODMAP, sans jour imposé. Clique sur un aliment pour dire qu'elle ne l'aime pas — la proposition disparaîtra. Clique sur un repas pour voir la recette.</p>
+
+      <div class="excluded-panel" id="excludedPanel" style="display:none;">
+        <h4>Aliments exclus des menus</h4>
+        <div class="hint">Clique sur la croix pour le remettre dans les propositions possibles.</div>
+        <div id="excludedChips"></div>
+      </div>
+
+      <div class="meal-tabs" id="mealTabs"></div>
+
+      <div class="search-row">
+        <input type="search" id="menuSearch" placeholder="Chercher par ingrédient… (ex : poulet, riz, courgette)">
+      </div>
+      <div class="food-count" id="menuCount"></div>
+
+      <div id="menuList"></div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB 3 : JOURNAL ===================== -->
+  <section class="panel" id="panel-journal">
+    <div class="card">
+      <h2 class="panel-title">Le journal du ventre</h2>
+      <p class="panel-sub">Note chaque jour ce qui a été mangé et le niveau de gêne ressenti.</p>
+
+      <form id="entryForm">
+        <div class="journal-form">
+          <div>
+            <label for="entryDate">Date</label>
+            <input type="date" id="entryDate" required>
+          </div>
+          <div>
+            <label for="entryFoods">Aliments mangés (séparés par des virgules)</label>
+            <input type="text" id="entryFoods" placeholder="riz, poulet, courgette, pain sans gluten" required>
+          </div>
+          <div class="full">
+            <label for="painRange">Mal de ventre ressenti</label>
+            <input type="range" id="painRange" min="0" max="10" value="0">
+            <div class="pain-live">
+              <span class="face sm low" id="painFace"></span>
+              <span id="painLabel">0 / 10 — Aucune douleur</span>
+            </div>
+          </div>
+          <div class="full">
+            <label for="entryNotes">Notes (optionnel)</label>
+            <textarea id="entryNotes" rows="2" placeholder="ballonnements en fin de journée, crampes après le déjeuner…"></textarea>
+          </div>
+          <div class="full">
+            <button type="submit" class="primary">Ajouter au journal</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="entries" id="entriesList"></div>
+
+      <div class="watch-list" id="watchList" style="display:none;">
+        <h3>Aliments à surveiller</h3>
+        <p class="hint">Calculé à partir de la douleur moyenne des jours où chaque aliment a été noté.</p>
+        <div id="watchItems"></div>
+      </div>
+
+      <div class="note-box">
+        Ce carnet aide à repérer des pistes, mais ne remplace pas l'avis d'un médecin ou d'un(e) diététicien(ne).
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB 4 : RÉINTRODUCTION ===================== -->
+  <section class="panel" id="panel-reintro">
+    <div class="card">
+      <h2 class="panel-title">Réintroduire, un aliment à la fois</h2>
+      <p class="panel-sub">La phase de réintroduction se fait normalement <strong>un aliment (ou une famille de FODMAP) à la fois</strong>, testé sur environ <strong>3 jours</strong>, suivi de <strong>2 à 3 jours de pause</strong> avant le test suivant — soit un rythme d'à peu près un test par semaine. La phase complète prend en général 6 à 8 semaines.</p>
+
+      <form id="reintroForm">
+        <div class="reintro-form">
+          <div class="food-picker">
+            <label for="reintroFood">Aliment à tester</label>
+            <input type="text" id="reintroFood" placeholder="ex : ail, pomme, lait de vache" autocomplete="off" required>
+            <div class="food-picker-results" id="foodPickerResults"></div>
+          </div>
+          <div>
+            <label for="reintroStart">Début du test</label>
+            <input type="date" id="reintroStart" required>
+          </div>
+          <div>
+            <label for="reintroDuration">Durée (jours)</label>
+            <input type="number" id="reintroDuration" min="1" max="7" value="3" required>
+          </div>
+          <div class="full">
+            <button type="submit" class="primary">Démarrer ce test</button>
+          </div>
+        </div>
+      </form>
+
+      <div id="testsList" style="margin-top:22px;"></div>
+
+      <div class="summary-cols">
+        <div>
+          <h3 style="font-family:'Fraunces',serif; color:var(--danger-ink); font-size:1.05rem;">🔴 Aliments qui posent problème</h3>
+          <div id="problemList" class="watch-list"></div>
+        </div>
+        <div>
+          <h3 style="font-family:'Fraunces',serif; color:var(--success-ink); font-size:1.05rem;">🟢 Aliments qu'elle peut réintégrer</h3>
+          <div id="okList" class="watch-list"></div>
+        </div>
+      </div>
+
+      <div class="note-box">
+        Idéalement, un seul aliment est testé à la fois, sur un fond alimentaire pauvre en FODMAP. Les aliments classés « problématiques » sont automatiquement retirés des menus de l'onglet 02, et ceux classés « OK » font réapparaître de nouvelles propositions de menus qui les contiennent.
+      </div>
+    </div>
+  </section>
+
+  <footer>Fait avec soin — les niveaux de FODMAP sont donnés à titre indicatif et la tolérance varie d'une personne à l'autre.</footer>
+</div>
+
+<script>
+/* ============================================================
+   STORAGE
+   ============================================================ */
+const hasStorage = typeof window.storage !== 'undefined';
+const memoryStore = {};
+async function storeGet(key, shared){
+  if(hasStorage){
+    try{ const r = await window.storage.get(key, !!shared); return r ? r.value : null; }
+    catch(e){ return (typeof memoryStore[key] === 'undefined') ? null : memoryStore[key]; }
+  }
+  return (typeof memoryStore[key] === 'undefined') ? null : memoryStore[key];
+}
+async function storeSet(key, value, shared){
+  if(hasStorage){
+    try{ await window.storage.set(key, value, !!shared); return; }
+    catch(e){ /* fall through */ }
+  }
+  memoryStore[key] = value;
+}
+
+/* ============================================================
+   PROFIL — permet à plusieurs personnes (ex : toi et ton père)
+   d'utiliser le même lien sans mélanger leurs données. Les
+   goûts, le journal et les tests de réintroduction sont stockés
+   dans un espace partagé, mais séparés par le prénom choisi.
+   ============================================================ */
+let profile = 'default';
+const PROFILES = ['patrick', 'agathe'];
+function pk(base){ return `${base}::${profile}`; }
+function updateProfileLabel(){
+  const el = document.getElementById('profileCurrent');
+  if(el){
+    el.textContent = PROFILES.includes(profile)
+      ? `Profil actif : ${profile.charAt(0).toUpperCase()}${profile.slice(1)}`
+      : 'Choisis ton prénom pour charger tes propres données';
+  }
+  document.querySelectorAll('.profile-choice').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.profile === profile);
+  });
+}
+async function applyProfile(name){
+  profile = PROFILES.includes(name) ? name : 'default';
+  await storeSet('fodmap-remembered-profile-name', profile, false);
+  updateProfileLabel();
+  await loadProfileData();
+}
+async function loadProfileData(){
+  const dislikedRaw = await storeGet(pk('fodmap-disliked-foods'), true);
+  dislikedFoods = new Set();
+  if(dislikedRaw){ try{ dislikedFoods = new Set(JSON.parse(dislikedRaw)); }catch(e){ dislikedFoods = new Set(); } }
+
+  const testsRaw = await storeGet(pk('fodmap-reintro-tests'), true);
+  reintroTests = [];
+  if(testsRaw){ try{ reintroTests = JSON.parse(testsRaw); }catch(e){ reintroTests = []; } }
+  recomputeBlockedUnlocked();
+
+  const entriesRaw = await storeGet(pk('fodmap-journal-entries'), true);
+  journalEntries = [];
+  if(entriesRaw){ try{ journalEntries = JSON.parse(entriesRaw); }catch(e){ journalEntries = []; } }
+
+  renderExcludedPanel();
+  renderMenus();
+  renderTests();
+  renderJournal();
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ============================================================
+   DATE HELPERS
+   ============================================================ */
+function isoDate(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function addDays(d, n){ const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+function formatDate(iso){
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+const today = new Date(); today.setHours(0,0,0,0);
+
+/* ============================================================
+   TAB 1 — FOOD DATABASE
+   ============================================================ */
+const FOODS = [
+  {n:"Banane pas mûre", c:"Fruits", l:"low"},
+  {n:"Banane bien mûre", c:"Fruits", l:"moderate", x:"les FODMAP augmentent en mûrissant"},
+  {n:"Orange", c:"Fruits", l:"low"},
+  {n:"Mandarine / Clémentine", c:"Fruits", l:"low"},
+  {n:"Citron", c:"Fruits", l:"low"},
+  {n:"Citron vert", c:"Fruits", l:"low"},
+  {n:"Pamplemousse", c:"Fruits", l:"moderate"},
+  {n:"Fraise", c:"Fruits", l:"low"},
+  {n:"Framboise", c:"Fruits", l:"low"},
+  {n:"Myrtille", c:"Fruits", l:"low"},
+  {n:"Cassis", c:"Fruits", l:"moderate"},
+  {n:"Raisin", c:"Fruits", l:"low"},
+  {n:"Kiwi", c:"Fruits", l:"low"},
+  {n:"Ananas", c:"Fruits", l:"low"},
+  {n:"Papaye", c:"Fruits", l:"low"},
+  {n:"Fruit de la passion", c:"Fruits", l:"low"},
+  {n:"Melon cantaloup", c:"Fruits", l:"low"},
+  {n:"Melon miel (honeydew)", c:"Fruits", l:"high"},
+  {n:"Pastèque", c:"Fruits", l:"high"},
+  {n:"Pomme", c:"Fruits", l:"high"},
+  {n:"Poire", c:"Fruits", l:"high"},
+  {n:"Pêche", c:"Fruits", l:"high"},
+  {n:"Abricot", c:"Fruits", l:"high"},
+  {n:"Prune", c:"Fruits", l:"high"},
+  {n:"Cerise", c:"Fruits", l:"high"},
+  {n:"Mangue", c:"Fruits", l:"high"},
+  {n:"Figue", c:"Fruits", l:"high"},
+  {n:"Datte", c:"Fruits", l:"high"},
+  {n:"Raisin sec", c:"Fruits", l:"high"},
+  {n:"Litchi", c:"Fruits", l:"high"},
+  {n:"Nectarine", c:"Fruits", l:"high"},
+  {n:"Grenade", c:"Fruits", l:"moderate"},
+  {n:"Avocat", c:"Fruits", l:"moderate", x:"OK en petite quantité (~1/8)"},
+
+  {n:"Carotte", c:"Légumes", l:"low"},
+  {n:"Concombre", c:"Légumes", l:"low"},
+  {n:"Courgette", c:"Légumes", l:"low"},
+  {n:"Laitue", c:"Légumes", l:"low"},
+  {n:"Roquette", c:"Légumes", l:"low"},
+  {n:"Épinard", c:"Légumes", l:"low"},
+  {n:"Poivron rouge", c:"Légumes", l:"low"},
+  {n:"Poivron vert", c:"Légumes", l:"moderate"},
+  {n:"Tomate", c:"Légumes", l:"low"},
+  {n:"Aubergine", c:"Légumes", l:"low"},
+  {n:"Haricot vert", c:"Légumes", l:"low"},
+  {n:"Pomme de terre", c:"Légumes", l:"low"},
+  {n:"Patate douce", c:"Légumes", l:"moderate"},
+  {n:"Maïs doux", c:"Légumes", l:"moderate"},
+  {n:"Gingembre", c:"Légumes", l:"low"},
+  {n:"Ciboulette (partie verte)", c:"Légumes", l:"low"},
+  {n:"Poireau (partie verte)", c:"Légumes", l:"low"},
+  {n:"Fenouil (bulbe)", c:"Légumes", l:"low"},
+  {n:"Radis", c:"Légumes", l:"low"},
+  {n:"Chou rouge", c:"Légumes", l:"low"},
+  {n:"Chou vert", c:"Légumes", l:"moderate"},
+  {n:"Brocoli (têtes)", c:"Légumes", l:"low"},
+  {n:"Courge butternut", c:"Légumes", l:"moderate"},
+  {n:"Champignon de Paris", c:"Légumes", l:"high"},
+  {n:"Pleurotes", c:"Légumes", l:"low"},
+  {n:"Ail", c:"Légumes", l:"high"},
+  {n:"Oignon", c:"Légumes", l:"high"},
+  {n:"Échalote", c:"Légumes", l:"high"},
+  {n:"Poireau (partie blanche)", c:"Légumes", l:"high"},
+  {n:"Chou-fleur", c:"Légumes", l:"high"},
+  {n:"Artichaut", c:"Légumes", l:"high"},
+  {n:"Asperge", c:"Légumes", l:"high"},
+  {n:"Chou de Bruxelles", c:"Légumes", l:"high"},
+  {n:"Betterave", c:"Légumes", l:"high"},
+  {n:"Céleri", c:"Légumes", l:"moderate"},
+  {n:"Petits pois", c:"Légumes", l:"high"},
+  {n:"Pois mange-tout", c:"Légumes", l:"moderate"},
+
+  {n:"Riz blanc", c:"Féculents & céréales", l:"low"},
+  {n:"Riz complet", c:"Féculents & céréales", l:"low"},
+  {n:"Quinoa", c:"Féculents & céréales", l:"low"},
+  {n:"Avoine (petite portion)", c:"Féculents & céréales", l:"low"},
+  {n:"Sarrasin", c:"Féculents & céréales", l:"low"},
+  {n:"Polenta / farine de maïs", c:"Féculents & céréales", l:"low"},
+  {n:"Pain sans gluten", c:"Féculents & céréales", l:"low"},
+  {n:"Pâtes sans gluten (riz/maïs)", c:"Féculents & céréales", l:"low"},
+  {n:"Pain au levain (tranche fine)", c:"Féculents & céréales", l:"moderate"},
+  {n:"Pain de blé classique", c:"Féculents & céréales", l:"high"},
+  {n:"Pâtes de blé classiques", c:"Féculents & céréales", l:"high"},
+  {n:"Couscous (blé)", c:"Féculents & céréales", l:"high"},
+  {n:"Orge", c:"Féculents & céréales", l:"high"},
+  {n:"Seigle", c:"Féculents & céréales", l:"high"},
+  {n:"Semoule de blé", c:"Féculents & céréales", l:"high"},
+
+  {n:"Tofu ferme", c:"Légumineuses & protéines", l:"low"},
+  {n:"Tempeh", c:"Légumineuses & protéines", l:"low"},
+  {n:"Tofu soyeux", c:"Légumineuses & protéines", l:"moderate"},
+  {n:"Edamame (petite portion)", c:"Légumineuses & protéines", l:"moderate"},
+  {n:"Pois chiches en conserve, rincés (petite portion)", c:"Légumineuses & protéines", l:"moderate"},
+  {n:"Lentilles", c:"Légumineuses & protéines", l:"high"},
+  {n:"Haricots rouges", c:"Légumineuses & protéines", l:"high"},
+  {n:"Haricots blancs", c:"Légumineuses & protéines", l:"high"},
+
+  {n:"Poulet nature", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Bœuf nature", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Porc nature", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Poisson nature", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Crevettes", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Thon", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Œufs", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Charcuterie industrielle", c:"Viandes, poissons & œufs", l:"high", x:"vérifier ail/oignon sur l'étiquette"},
+  {n:"Saucisses industrielles", c:"Viandes, poissons & œufs", l:"high", x:"souvent additionnées d'oignon/ail"},
+
+  {n:"Lait sans lactose", c:"Produits laitiers", l:"low"},
+  {n:"Lait d'amande", c:"Produits laitiers", l:"low"},
+  {n:"Lait de riz", c:"Produits laitiers", l:"low"},
+  {n:"Lait de soja (protéines de soja)", c:"Produits laitiers", l:"low"},
+  {n:"Lait de coco (petite quantité)", c:"Produits laitiers", l:"moderate"},
+  {n:"Yaourt sans lactose", c:"Produits laitiers", l:"low"},
+  {n:"Yaourt de coco", c:"Produits laitiers", l:"low"},
+  {n:"Fromages affinés (cheddar, brie, parmesan…)", c:"Produits laitiers", l:"low"},
+  {n:"Feta (petite quantité)", c:"Produits laitiers", l:"low"},
+  {n:"Beurre", c:"Produits laitiers", l:"low"},
+  {n:"Crème fraîche (petite quantité)", c:"Produits laitiers", l:"moderate"},
+  {n:"Lait de vache", c:"Produits laitiers", l:"high"},
+  {n:"Yaourt nature (lait de vache)", c:"Produits laitiers", l:"high"},
+  {n:"Fromage frais / cottage / ricotta", c:"Produits laitiers", l:"high"},
+  {n:"Mascarpone", c:"Produits laitiers", l:"high"},
+  {n:"Glace (lait de vache)", c:"Produits laitiers", l:"high"},
+
+  {n:"Noix", c:"Noix & graines", l:"low"},
+  {n:"Noix de macadamia", c:"Noix & graines", l:"low"},
+  {n:"Cacahuètes", c:"Noix & graines", l:"low"},
+  {n:"Graines de courge", c:"Noix & graines", l:"low"},
+  {n:"Graines de tournesol", c:"Noix & graines", l:"low"},
+  {n:"Graines de chia (petite quantité)", c:"Noix & graines", l:"low"},
+  {n:"Graines de lin (petite quantité)", c:"Noix & graines", l:"low"},
+  {n:"Amandes (poignée, ~10)", c:"Noix & graines", l:"moderate"},
+  {n:"Noix de cajou", c:"Noix & graines", l:"high"},
+  {n:"Pistaches", c:"Noix & graines", l:"high"},
+
+  {n:"Sucre blanc", c:"Édulcorants", l:"low"},
+  {n:"Sirop d'érable", c:"Édulcorants", l:"low"},
+  {n:"Sucre de coco", c:"Édulcorants", l:"low"},
+  {n:"Stevia", c:"Édulcorants", l:"low"},
+  {n:"Miel", c:"Édulcorants", l:"high"},
+  {n:"Sirop d'agave", c:"Édulcorants", l:"high"},
+  {n:"Sorbitol (E420)", c:"Édulcorants", l:"high"},
+  {n:"Mannitol (E421)", c:"Édulcorants", l:"high"},
+  {n:"Xylitol", c:"Édulcorants", l:"high"},
+  {n:"Isomalt", c:"Édulcorants", l:"high"},
+
+  {n:"Eau", c:"Boissons", l:"low"},
+  {n:"Café noir", c:"Boissons", l:"low"},
+  {n:"Thé noir léger", c:"Boissons", l:"low"},
+  {n:"Thé vert", c:"Boissons", l:"low"},
+  {n:"Tisane à la menthe", c:"Boissons", l:"low"},
+  {n:"Vin (petite quantité)", c:"Boissons", l:"low"},
+  {n:"Jus d'orange (petite quantité)", c:"Boissons", l:"low"},
+  {n:"Bière (petite quantité)", c:"Boissons", l:"moderate"},
+  {n:"Thé chai infusé longtemps", c:"Boissons", l:"moderate"},
+  {n:"Kombucha", c:"Boissons", l:"moderate"},
+  {n:"Soda / boisson gazeuse", c:"Boissons", l:"moderate", x:"vérifier l'édulcorant utilisé"},
+  {n:"Jus de pomme", c:"Boissons", l:"high"},
+  {n:"Jus de pruneau", c:"Boissons", l:"high"},
+
+  {n:"Huile d'olive", c:"Condiments & sauces", l:"low"},
+  {n:"Huile infusée à l'ail (filtrée)", c:"Condiments & sauces", l:"low"},
+  {n:"Sauce soja", c:"Condiments & sauces", l:"low"},
+  {n:"Vinaigre balsamique", c:"Condiments & sauces", l:"low"},
+  {n:"Moutarde", c:"Condiments & sauces", l:"low"},
+  {n:"Mayonnaise nature", c:"Condiments & sauces", l:"low"},
+  {n:"Ketchup (petite quantité)", c:"Condiments & sauces", l:"moderate"},
+  {n:"Sauce tomate industrielle", c:"Condiments & sauces", l:"high", x:"souvent à base d'ail/oignon"},
+  {n:"Bouillon cube classique", c:"Condiments & sauces", l:"high", x:"souvent ail/oignon/extrait de levure"},
+
+  {n:"Basilic", c:"Épices & herbes", l:"low"},
+  {n:"Persil", c:"Épices & herbes", l:"low"},
+  {n:"Thym", c:"Épices & herbes", l:"low"},
+  {n:"Origan", c:"Épices & herbes", l:"low"},
+  {n:"Curcuma", c:"Épices & herbes", l:"low"},
+  {n:"Cumin", c:"Épices & herbes", l:"low"},
+  {n:"Paprika", c:"Épices & herbes", l:"low"},
+  {n:"Poivre noir", c:"Épices & herbes", l:"low"},
+  {n:"Cannelle", c:"Épices & herbes", l:"low"},
+  {n:"Ail en poudre", c:"Épices & herbes", l:"high"},
+  {n:"Oignon en poudre", c:"Épices & herbes", l:"high"},
+
+  {n:"Navet", c:"Légumes", l:"low"},
+  {n:"Panais", c:"Légumes", l:"low"},
+  {n:"Cornichon", c:"Légumes", l:"low"},
+  {n:"Olives", c:"Légumes", l:"low"},
+  {n:"Blette / bette à carde", c:"Légumes", l:"low"},
+  {n:"Salsifis", c:"Légumes", l:"moderate"},
+  {n:"Igname", c:"Légumes", l:"moderate"},
+
+  {n:"Kaki / plaquemine", c:"Fruits", l:"high"},
+  {n:"Coing", c:"Fruits", l:"high"},
+  {n:"Groseille", c:"Fruits", l:"moderate"},
+  {n:"Fruit du dragon (pitaya)", c:"Fruits", l:"low"},
+  {n:"Physalis (alkékenge)", c:"Fruits", l:"moderate"},
+
+  {n:"Millet", c:"Féculents & céréales", l:"low"},
+  {n:"Amarante", c:"Féculents & céréales", l:"low"},
+  {n:"Avoine (grande portion)", c:"Féculents & céréales", l:"moderate"},
+  {n:"Pain d'épeautre au levain", c:"Féculents & céréales", l:"moderate"},
+
+  {n:"Pois cassés", c:"Légumineuses & protéines", l:"high"},
+  {n:"Fèves", c:"Légumineuses & protéines", l:"high"},
+  {n:"Houmous classique (à l'ail)", c:"Légumineuses & protéines", l:"high", x:"à cause de l'ail ; version sans ail possible"},
+  {n:"Beurre de cacahuète", c:"Légumineuses & protéines", l:"low"},
+  {n:"Seitan (blé)", c:"Légumineuses & protéines", l:"high"},
+
+  {n:"Kéfir", c:"Produits laitiers", l:"high"},
+  {n:"Skyr nature", c:"Produits laitiers", l:"high"},
+  {n:"Lait de chèvre", c:"Produits laitiers", l:"high"},
+
+  {n:"Noisettes (portion limitée, ~15)", c:"Noix & graines", l:"moderate"},
+  {n:"Noix du Brésil", c:"Noix & graines", l:"low"},
+  {n:"Noix de pécan", c:"Noix & graines", l:"low"},
+
+  {n:"Sucre roux", c:"Édulcorants", l:"low"},
+  {n:"Confiture classique", c:"Édulcorants", l:"moderate"},
+
+  {n:"Eau gazeuse", c:"Boissons", l:"low"},
+  {n:"Cidre", c:"Boissons", l:"high"},
+
+  {n:"Tahini (purée de sésame)", c:"Condiments & sauces", l:"low"},
+  {n:"Pesto classique (à l'ail)", c:"Condiments & sauces", l:"high"},
+  {n:"Câpres", c:"Condiments & sauces", l:"low"},
+  {n:"Sauce Worcestershire", c:"Condiments & sauces", l:"high", x:"contient souvent ail/oignon"},
+
+  {n:"Chocolat noir 70%+ (petite quantité)", c:"Sucreries & snacks", l:"low"},
+  {n:"Chocolat au lait", c:"Sucreries & snacks", l:"high"},
+  {n:"Popcorn nature", c:"Sucreries & snacks", l:"low"},
+  {n:"Chips nature (pomme de terre)", c:"Sucreries & snacks", l:"low"},
+  {n:"Biscuits secs au blé", c:"Sucreries & snacks", l:"high"},
+  {n:"Barres de céréales industrielles", c:"Sucreries & snacks", l:"high", x:"souvent blé, miel ou sirop de glucose-fructose : vérifier l'étiquette"},
+];
+
+const CATS = [...new Set(FOODS.map(f=>f.c))];
+let activeCat = 'Tous';
+let activeLevel = 'all';
+const LEVEL_FILTERS = [
+  {key:'all', label:'Tous les niveaux'},
+  {key:'low', label:'✅ Autorisé'},
+  {key:'moderate', label:'⚠️ Portion limitée'},
+  {key:'high', label:'⛔ À éviter'},
+];
+
+function renderLevelChips(){
+  const el = document.getElementById('levelChips');
+  el.innerHTML = LEVEL_FILTERS.map(lv=>`
+    <span class="chip level-chip ${lv.key} ${activeLevel===lv.key?'active':''}" data-level="${lv.key}">${lv.label}</span>
+  `).join('');
+  el.querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{ activeLevel = chip.dataset.level; renderLevelChips(); renderFoods(); });
+  });
+}
+
+function renderChips(){
+  const el = document.getElementById('catChips');
+  el.innerHTML = '';
+  const all = document.createElement('span');
+  all.className = 'chip' + (activeCat==='Tous' ? ' active' : '');
+  all.textContent = 'Tous';
+  all.onclick = ()=>{ activeCat='Tous'; renderChips(); renderFoods(); };
+  el.appendChild(all);
+  CATS.forEach(c=>{
+    const chip = document.createElement('span');
+    chip.className = 'chip' + (activeCat===c ? ' active' : '');
+    chip.textContent = c;
+    chip.onclick = ()=>{ activeCat=c; renderChips(); renderFoods(); };
+    el.appendChild(chip);
+  });
+}
+
+function renderFoods(){
+  const q = document.getElementById('foodSearch').value.trim().toLowerCase();
+  const grid = document.getElementById('foodGrid');
+  const filtered = FOODS.filter(f=>{
+    const matchCat = activeCat==='Tous' || f.c===activeCat;
+    const matchLevel = activeLevel==='all' || f.l===activeLevel;
+    const matchQ = !q || f.n.toLowerCase().includes(q);
+    return matchCat && matchLevel && matchQ;
+  }).sort((a,b)=> a.n.localeCompare(b.n, 'fr'));
+
+  document.getElementById('foodCount').textContent = filtered.length + ' aliment' + (filtered.length>1?'s':'') + ' affiché' + (filtered.length>1?'s':'');
+
+  if(filtered.length===0){
+    grid.innerHTML = '<div class="empty-state">Aucun aliment ne correspond — essaie un autre mot.</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(f=>`
+    <div class="food-item">
+      <span class="face ${f.l}"></span>
+      <div class="meta">
+        <div class="name">${f.n}</div>
+        <div class="cat">${f.c}</div>
+        ${f.x ? `<div class="note">${f.x}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+document.getElementById('foodSearch').addEventListener('input', renderFoods);
+try{
+  renderChips();
+  renderLevelChips();
+  renderFoods();
+}catch(e){ console.error('Erreur au rendu de la liste des aliments :', e); }
+
+/* ============================================================
+   Aide partagée : retrouver la fiche FODMAP d'un aliment libre
+   ============================================================ */
+function normalizeFood(f){ return f.trim().toLowerCase(); }
+function getFoodInfo(food){
+  const nf = normalizeFood(food);
+  let match = FOODS.find(f=> f.n.toLowerCase() === nf);
+  if(!match) match = FOODS.find(f=> f.n.toLowerCase().includes(nf) || nf.includes(f.n.toLowerCase()));
+  return match || null;
+}
+function capFirst(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+/* ============================================================
+   TAB 2 — MENUS (propositions sans date, avec recette)
+   ============================================================ */
+const BREAKFASTS = [
+  {name:"Porridge d'avoine, banane pas mûre et myrtilles", foods:["avoine","banane","myrtille"],
+   recipe:{ingredients:["40 g de flocons d'avoine (petite portion)","200 ml de lait sans lactose","1/2 banane pas mûre","une poignée de myrtilles"],
+   steps:["Fais chauffer le lait sans lactose avec les flocons d'avoine 5 minutes en remuant.","Verse dans un bol.","Ajoute la banane coupée en rondelles et les myrtilles."]}},
+  {name:"Yaourt sans lactose, fraises et graines de chia", foods:["yaourt sans lactose","fraise","graines de chia"],
+   recipe:{ingredients:["150 g de yaourt sans lactose","6-8 fraises","1 c. à c. de graines de chia"],
+   steps:["Coupe les fraises en morceaux.","Mélange-les au yaourt.","Parsème de graines de chia avant de servir."]}},
+  {name:"Smoothie kiwi, orange et lait d'amande", foods:["kiwi","orange","lait d'amande"],
+   recipe:{ingredients:["1 kiwi","1 orange pelée","150 ml de lait d'amande"],
+   steps:["Place tous les ingrédients dans un blender.","Mixe jusqu'à obtenir une texture lisse.","Sers immédiatement."]}},
+  {name:"Pain sans gluten grillé, beurre et fromage affiné", foods:["pain sans gluten","beurre","fromage affiné"],
+   recipe:{ingredients:["2 tranches de pain sans gluten","beurre","2 tranches de fromage affiné (cheddar ou emmental)"],
+   steps:["Fais griller les tranches de pain sans gluten.","Tartine de beurre.","Ajoute le fromage affiné par-dessus."]}},
+  {name:"Porridge de sarrasin, framboises et sirop d'érable", foods:["sarrasin","framboise","sirop d'érable"],
+   recipe:{ingredients:["40 g de flocons de sarrasin","200 ml d'eau ou de lait sans lactose","une poignée de framboises","1 c. à c. de sirop d'érable"],
+   steps:["Fais cuire les flocons de sarrasin dans le liquide choisi 5-8 minutes.","Verse dans un bol.","Ajoute les framboises et le sirop d'érable."]}},
+  {name:"Œufs brouillés, épinards et pain sans gluten", foods:["œufs","épinards","pain sans gluten"],
+   recipe:{ingredients:["2 œufs","une poignée d'épinards frais","1 tranche de pain sans gluten","huile d'olive"],
+   steps:["Fais revenir les épinards 1-2 min dans un peu d'huile d'olive.","Ajoute les œufs battus et remue jusqu'à cuisson souhaitée.","Sers avec la tranche de pain sans gluten grillée."]}},
+  {name:"Crêpes sans gluten, sirop d'érable et myrtilles", foods:["crêpes sans gluten","sirop d'érable","myrtille"],
+   recipe:{ingredients:["2-3 crêpes sans gluten (prêtes ou maison)","1 c. à s. de sirop d'érable","une poignée de myrtilles"],
+   steps:["Réchauffe les crêpes sans gluten à la poêle ou au grille-pain.","Nappe de sirop d'érable.","Ajoute les myrtilles avant de servir."]}},
+  {name:"Muesli maison (avoine, noix, graines de courge) et lait sans lactose", foods:["avoine","noix","graines de courge","lait sans lactose"],
+   recipe:{ingredients:["40 g de flocons d'avoine","une poignée de noix concassées","1 c. à s. de graines de courge","200 ml de lait sans lactose"],
+   steps:["Mélange l'avoine, les noix et les graines dans un bol.","Verse le lait sans lactose par-dessus.","Laisse reposer quelques minutes avant de déguster."]}},
+  {name:"Compote ananas-fraise et yaourt de coco", foods:["ananas","fraise","yaourt de coco"],
+   recipe:{ingredients:["100 g d'ananas frais","6 fraises","100 g de yaourt de coco"],
+   steps:["Coupe l'ananas et les fraises en morceaux.","Fais compoter 10 minutes à feu doux avec un peu d'eau si besoin.","Laisse refroidir et sers avec le yaourt de coco."]}},
+  {name:"Tartine pain sans gluten, fromage frais sans lactose, sirop d'érable", foods:["pain sans gluten","fromage frais sans lactose","sirop d'érable"],
+   recipe:{ingredients:["1 tranche de pain sans gluten","2 c. à s. de fromage frais sans lactose","1 filet de sirop d'érable"],
+   steps:["Fais griller la tranche de pain sans gluten.","Étale le fromage frais sans lactose.","Termine avec un filet de sirop d'érable."]}},
+  {name:"Pancakes sans gluten à la banane pas mûre", foods:["pancakes sans gluten","banane"],
+   recipe:{ingredients:["1 banane pas mûre écrasée","2 œufs","3 c. à s. de farine sans gluten"],
+   steps:["Mélange la banane écrasée avec les œufs et la farine sans gluten.","Fais cuire des petites portions à la poêle 2-3 min de chaque côté.","Sers tel quel ou avec un filet de sirop d'érable."]}},
+  {name:"Salade de fruits (orange, kiwi, raisin)", foods:["orange","kiwi","raisin"],
+   recipe:{ingredients:["1 orange","1 kiwi","une grappe de raisin"],
+   steps:["Coupe l'orange et le kiwi en morceaux.","Ajoute les grains de raisin.","Mélange et sers frais."]}},
+];
+const LUNCHES = [
+  {name:"Poulet grillé, riz basmati, courgettes rôties", foods:["poulet","riz","courgette"],
+   recipe:{ingredients:["1 blanc de poulet","80 g de riz basmati","1 courgette","huile d'olive"],
+   steps:["Fais cuire le riz basmati selon les instructions.","Coupe la courgette en rondelles, fais-la rôtir au four avec un filet d'huile d'olive 15-20 min.","Grille le poulet à la poêle et sers le tout ensemble."]}},
+  {name:"Saumon poêlé, quinoa, poivron rouge et concombre", foods:["saumon","quinoa","poivron rouge","concombre"],
+   recipe:{ingredients:["1 pavé de saumon","80 g de quinoa","1/2 poivron rouge","1/2 concombre"],
+   steps:["Fais cuire le quinoa selon les instructions.","Poêle le saumon 3-4 min de chaque côté.","Sers avec le poivron et le concombre coupés en dés."]}},
+  {name:"Bœuf sauté, riz, carottes et haricots verts", foods:["bœuf","riz","carotte","haricot vert"],
+   recipe:{ingredients:["150 g de bœuf en lanières","80 g de riz","1 carotte","une poignée de haricots verts"],
+   steps:["Fais cuire le riz selon les instructions.","Fais sauter le bœuf à feu vif 3-4 minutes.","Ajoute la carotte et les haricots verts cuits à la vapeur, mélange et sers avec le riz."]}},
+  {name:"Salade de quinoa, tofu ferme, tomates cerises et concombre", foods:["quinoa","tofu","tomate","concombre"],
+   recipe:{ingredients:["80 g de quinoa cuit","100 g de tofu ferme","une poignée de tomates cerises","1/2 concombre"],
+   steps:["Fais griller le tofu coupé en dés à la poêle avec un peu d'huile d'olive.","Mélange le quinoa avec la tomate et le concombre coupés.","Ajoute le tofu grillé et assaisonne à ton goût."]}},
+  {name:"Wrap sans gluten, poulet, laitue et poivron rouge", foods:["pain sans gluten","poulet","laitue","poivron rouge"],
+   recipe:{ingredients:["1 galette sans gluten","1 blanc de poulet cuit","quelques feuilles de laitue","1/2 poivron rouge","mayonnaise nature"],
+   steps:["Coupe le poulet et le poivron en lanières.","Garnis la galette de laitue, poulet, poivron et un peu de mayonnaise.","Roule et sers."]}},
+  {name:"Poisson blanc grillé, riz et courgettes grillées", foods:["poisson","riz","courgette"],
+   recipe:{ingredients:["1 filet de poisson blanc","80 g de riz","1 courgette","huile d'olive"],
+   steps:["Fais cuire le riz selon les instructions.","Grille les tranches de courgette à la poêle avec un filet d'huile.","Cuis le poisson à la poêle 3-4 min de chaque côté et sers ensemble."]}},
+  {name:"Riz, edamame et légumes sautés au gingembre", foods:["riz","edamame","gingembre"],
+   recipe:{ingredients:["80 g de riz","une poignée d'edamame (petite portion)","carotte et courgette","gingembre frais"],
+   steps:["Fais cuire le riz selon les instructions.","Fais sauter les légumes coupés en lanières avec le gingembre râpé.","Ajoute l'edamame en fin de cuisson et sers avec le riz."]}},
+  {name:"Poulet rôti, patate douce et brocoli", foods:["poulet","patate douce","brocoli"],
+   recipe:{ingredients:["1 cuisse de poulet","1 petite patate douce","une poignée de têtes de brocoli","huile d'olive"],
+   steps:["Fais rôtir le poulet et la patate douce coupée en cubes au four 25-30 min à 200°C.","Cuis les têtes de brocoli à la vapeur 5-7 minutes.","Sers le tout ensemble."]}},
+  {name:"Steak de bœuf, pommes de terre sautées et carottes", foods:["bœuf","pomme de terre","carotte"],
+   recipe:{ingredients:["1 steak de bœuf","2 pommes de terre","1 carotte","huile d'olive"],
+   steps:["Fais cuire les pommes de terre coupées en dés à la poêle jusqu'à ce qu'elles soient dorées.","Cuis la carotte à la vapeur.","Grille le steak selon la cuisson désirée et sers ensemble."]}},
+  {name:"Salade de riz froid, thon, tomate et concombre", foods:["riz","thon","tomate","concombre"],
+   recipe:{ingredients:["80 g de riz cuit et refroidi","1 boîte de thon au naturel","1 tomate","1/2 concombre"],
+   steps:["Mélange le riz froid avec la tomate et le concombre coupés en dés.","Ajoute le thon égoutté.","Assaisonne d'huile d'olive et de citron."]}},
+  {name:"Curry de tofu au lait de coco (petite quantité) et riz", foods:["tofu","lait de coco","riz"],
+   recipe:{ingredients:["100 g de tofu ferme","80 ml de lait de coco (petite quantité)","curcuma, cumin","80 g de riz"],
+   steps:["Fais chauffer le lait de coco avec le curcuma et le cumin.","Ajoute le tofu coupé en dés et laisse mijoter 10 minutes.","Sers avec le riz cuit."]}},
+  {name:"Escalope de porc, polenta et épinards", foods:["porc","polenta","épinards"],
+   recipe:{ingredients:["1 escalope de porc","80 g de polenta","une poignée d'épinards frais","huile d'olive"],
+   steps:["Prépare la polenta selon les instructions du paquet.","Fais revenir les épinards 1-2 minutes dans un peu d'huile.","Cuis l'escalope de porc à la poêle et sers avec la polenta et les épinards."]}},
+  {name:"Salade de quinoa, poulet, raisin et noix", foods:["quinoa","poulet","raisin","noix"],
+   recipe:{ingredients:["80 g de quinoa cuit","1 blanc de poulet cuit","une grappe de raisin","une poignée de noix"],
+   steps:["Mélange le quinoa avec le poulet coupé en dés.","Ajoute les grains de raisin et les noix concassées.","Assaisonne d'huile d'olive avant de servir."]}},
+  {name:"Nouilles de riz sautées au poulet et carottes", foods:["nouilles de riz","poulet","carotte"],
+   recipe:{ingredients:["80 g de nouilles de riz","1 blanc de poulet","1 carotte","huile d'olive ou sauce soja"],
+   steps:["Fais cuire les nouilles de riz selon les instructions.","Fais sauter le poulet en lanières avec la carotte émincée.","Ajoute les nouilles, mélange et assaisonne d'un peu de sauce soja."]}},
+];
+const DINNERS = [
+  {name:"Omelette épinards-tomates, pain sans gluten", foods:["œufs","épinards","tomate","pain sans gluten"],
+   recipe:{ingredients:["2 œufs","une poignée d'épinards","1 tomate","1 tranche de pain sans gluten"],
+   steps:["Fais revenir les épinards et la tomate coupée en dés quelques minutes.","Ajoute les œufs battus et cuis en omelette.","Sers avec la tranche de pain sans gluten."]}},
+  {name:"Soupe de courge butternut (huile infusée à l'ail), pain sans gluten", foods:["courge butternut","pain sans gluten"],
+   recipe:{ingredients:["300 g de courge butternut","huile infusée à l'ail (filtrée)","bouillon maison sans oignon/ail","1 tranche de pain sans gluten"],
+   steps:["Fais revenir la courge coupée en dés dans un peu d'huile infusée.","Ajoute le bouillon et laisse mijoter 20 minutes.","Mixe et sers avec le pain sans gluten."]}},
+  {name:"Frittata poivron rouge et cheddar, salade de laitue", foods:["œufs","poivron rouge","cheddar","laitue"],
+   recipe:{ingredients:["3 œufs","1/2 poivron rouge","30 g de cheddar râpé","quelques feuilles de laitue"],
+   steps:["Fais revenir le poivron coupé en dés quelques minutes.","Ajoute les œufs battus et le cheddar, cuis à couvert à feu doux.","Sers avec une salade de laitue."]}},
+  {name:"Pâtes sans gluten, sauce tomate maison, parmesan", foods:["pâtes sans gluten","tomate","parmesan"],
+   recipe:{ingredients:["100 g de pâtes sans gluten","200 g de tomates concassées","huile infusée à l'ail","parmesan"],
+   steps:["Fais cuire les pâtes sans gluten selon les instructions.","Fais mijoter les tomates concassées avec un peu d'huile infusée 10-15 minutes.","Mélange avec les pâtes et termine avec un peu de parmesan."]}},
+  {name:"Pizza maison pâte sans gluten, mozzarella, poivron rouge, roquette", foods:["pâte sans gluten","mozzarella","poivron rouge","roquette"],
+   recipe:{ingredients:["1 pâte à pizza sans gluten","sauce tomate maison","mozzarella","1/2 poivron rouge","une poignée de roquette"],
+   steps:["Étale la sauce tomate sur la pâte sans gluten.","Ajoute la mozzarella et le poivron émincé.","Fais cuire au four selon les instructions de la pâte, ajoute la roquette fraîche à la sortie du four."]}},
+  {name:"Soupe miso légère et riz", foods:["riz"],
+   recipe:{ingredients:["pâte miso (petite quantité)","eau ou bouillon","80 g de riz"],
+   steps:["Fais chauffer l'eau ou le bouillon sans le faire bouillir fort.","Délaye la pâte miso dedans hors du feu.","Sers avec le riz cuit."]}},
+  {name:"Poêlée de crevettes, riz et courgette", foods:["crevette","riz","courgette"],
+   recipe:{ingredients:["150 g de crevettes","80 g de riz","1 courgette","huile d'olive"],
+   steps:["Fais cuire le riz selon les instructions.","Fais revenir la courgette coupée en dés dans un peu d'huile.","Ajoute les crevettes, cuis 3-4 minutes et sers avec le riz."]}},
+  {name:"Gratin de pommes de terre sans lactose, salade verte", foods:["pomme de terre","laitue"],
+   recipe:{ingredients:["2 pommes de terre","crème et fromage sans lactose","quelques feuilles de salade"],
+   steps:["Coupe les pommes de terre en fines rondelles.","Dispose-les dans un plat avec la crème et le fromage sans lactose, fais cuire au four 30-35 min à 180°C.","Sers avec une salade verte."]}},
+  {name:"Poulet, riz, légumes rôtis (carotte, aubergine)", foods:["poulet","riz","carotte","aubergine"],
+   recipe:{ingredients:["1 blanc de poulet","80 g de riz","1 carotte","1/2 aubergine","huile d'olive"],
+   steps:["Fais rôtir la carotte et l'aubergine coupées en morceaux au four avec un filet d'huile 20-25 min.","Cuis le riz selon les instructions.","Grille le poulet à la poêle et sers le tout ensemble."]}},
+  {name:"Soupe carottes-gingembre, pain sans gluten", foods:["carotte","gingembre","pain sans gluten"],
+   recipe:{ingredients:["300 g de carottes","gingembre frais","bouillon maison","1 tranche de pain sans gluten"],
+   steps:["Fais cuire les carottes coupées en rondelles avec le gingembre dans le bouillon 20 minutes.","Mixe jusqu'à obtenir une texture lisse.","Sers avec le pain sans gluten."]}},
+  {name:"Tofu grillé, riz et brocoli", foods:["tofu","riz","brocoli"],
+   recipe:{ingredients:["100 g de tofu ferme","80 g de riz","une poignée de têtes de brocoli","huile d'olive"],
+   steps:["Fais cuire le riz et le brocoli vapeur.","Grille le tofu coupé en tranches à la poêle avec un peu d'huile.","Sers le tout ensemble."]}},
+  {name:"Poisson en papillote, pommes de terre et courgette", foods:["poisson","pomme de terre","courgette"],
+   recipe:{ingredients:["1 filet de poisson","2 pommes de terre","1 courgette","huile d'olive, citron"],
+   steps:["Coupe les pommes de terre et la courgette en fines tranches.","Dispose avec le poisson dans une papillote, arrose d'huile d'olive et de citron.","Fais cuire au four 20-25 min à 200°C."]}},
+  {name:"Quiche sans gluten aux épinards et feta", foods:["quiche sans gluten","épinards","feta"],
+   recipe:{ingredients:["1 pâte à tarte sans gluten","une poignée d'épinards","50 g de feta","3 œufs","un peu de crème sans lactose"],
+   steps:["Fais revenir les épinards quelques minutes.","Mélange les œufs et la crème, ajoute les épinards et la feta émiettée.","Verse sur la pâte et fais cuire au four 30-35 min à 180°C."]}},
+  {name:"Bœuf haché, purée de pommes de terre et carottes", foods:["bœuf","pomme de terre","carotte"],
+   recipe:{ingredients:["150 g de bœuf haché","2 pommes de terre","1 carotte","huile d'olive"],
+   steps:["Fais cuire les pommes de terre à l'eau puis écrase-les en purée.","Cuis la carotte à la vapeur.","Fais revenir le bœuf haché à la poêle et sers avec la purée et la carotte."]}},
+];
+const BONUS = {
+  breakfast: [
+    {name:"Tartine de pain de blé, beurre et miel", foods:["pain de blé","beurre","miel"], requires:"pain de blé",
+     recipe:{ingredients:["1 tranche de pain de blé","beurre","1 c. à c. de miel"],
+     steps:["Fais griller la tranche de pain de blé.","Tartine de beurre.","Ajoute un peu de miel par-dessus."]}},
+    {name:"Bol de yaourt nature (lait de vache) et fruits rouges", foods:["yaourt nature","fraise"], requires:"lait de vache",
+     recipe:{ingredients:["150 g de yaourt nature (lait de vache)","une poignée de fraises"],
+     steps:["Verse le yaourt dans un bol.","Ajoute les fraises coupées.","Sers frais."]}},
+  ],
+  lunch: [
+    {name:"Pâtes de blé classiques, sauce tomate, parmesan", foods:["pâtes de blé","tomate","parmesan"], requires:"blé",
+     recipe:{ingredients:["100 g de pâtes de blé classiques","200 g de tomates concassées","parmesan"],
+     steps:["Fais cuire les pâtes selon les instructions.","Fais mijoter la sauce tomate 10-15 minutes.","Mélange avec les pâtes et ajoute le parmesan."]}},
+    {name:"Salade de lentilles, feta et tomate", foods:["lentilles","feta","tomate"], requires:"lentilles",
+     recipe:{ingredients:["100 g de lentilles cuites","50 g de feta","1 tomate","huile d'olive"],
+     steps:["Mélange les lentilles avec la tomate coupée en dés.","Ajoute la feta émiettée.","Assaisonne d'huile d'olive avant de servir."]}},
+  ],
+  dinner: [
+    {name:"Poulet rôti à l'ail et à l'oignon, riz", foods:["poulet","ail","oignon","riz"], requires:"ail",
+     recipe:{ingredients:["1 cuisse de poulet","1 gousse d'ail","1/2 oignon","80 g de riz"],
+     steps:["Fais rôtir le poulet avec l'ail et l'oignon émincés au four 30 min à 200°C.","Cuis le riz selon les instructions.","Sers ensemble."]}},
+    {name:"Gratin de chou-fleur au fromage", foods:["chou-fleur","fromage affiné"], requires:"chou-fleur",
+     recipe:{ingredients:["300 g de chou-fleur","fromage affiné râpé","un peu de crème"],
+     steps:["Cuis le chou-fleur à la vapeur 10 minutes.","Dispose dans un plat, recouvre de crème et de fromage râpé.","Fais gratiner au four 15-20 min à 200°C."]}},
+  ],
+};
+
+let dislikedFoods = new Set();     // aliments qu'elle n'aime pas (clic sur un chip de menu)
+let blockedFoods = new Set();      // aliments classés "problématiques" en onglet 04
+let unlockedFoods = new Set();     // aliments classés "OK" en onglet 04
+
+// ----- Génération de menus supplémentaires pour le midi et le soir -----
+// Objectif : au moins 50 propositions dans chaque catégorie. Les 14 recettes
+// détaillées ci-dessus restent en tête de liste ; celles-ci complètent le choix
+// à partir de combinaisons protéine + féculent + légume, toutes faibles en FODMAP.
+const GEN_PROTEINS = [
+  {n:"poulet", art:"le "}, {n:"bœuf", art:"le "}, {n:"porc", art:"le "}, {n:"poisson blanc", art:"le "},
+  {n:"saumon", art:"le "}, {n:"crevettes", art:"les "}, {n:"thon", art:"le "}, {n:"œufs", art:"les "},
+  {n:"tofu ferme", art:"le "}, {n:"tempeh", art:"le "},
+];
+const GEN_CARBS = [
+  {n:"riz basmati", art:"le "}, {n:"riz complet", art:"le "}, {n:"quinoa", art:"le "},
+  {n:"pâtes sans gluten", art:"les "}, {n:"pommes de terre", art:"les "}, {n:"patate douce", art:"la "},
+  {n:"galettes de sarrasin", art:"les "}, {n:"polenta", art:"la "}, {n:"nouilles de riz", art:"les "},
+];
+const GEN_VEGGIES = [
+  {n:"carotte", art:"la "}, {n:"courgette", art:"la "}, {n:"poivron rouge", art:"le "}, {n:"épinards", art:"les "},
+  {n:"aubergine", art:"l'"}, {n:"haricots verts", art:"les "}, {n:"brocoli", art:"le "}, {n:"tomate", art:"la "},
+  {n:"concombre", art:"le "}, {n:"fenouil", art:"le "}, {n:"chou rouge", art:"le "}, {n:"pleurotes", art:"les "},
+  {n:"radis", art:"les "},
+];
+const LUNCH_METHODS = ["grillé(e)","poêlé(e)","sauté(e)","rôti(e) au four"];
+const DINNER_METHODS = ["mijoté(e)","rôti(e) au four","poêlé(e)","en papillote","sauté(e)"];
+
+function generateCombos(count, methods){
+  const combos = [];
+  const used = new Set();
+  let pi=0, ci=0, vi=0, mi=0, guard=0;
+  while(combos.length < count && guard < 8000){
+    guard++;
+    const protein = GEN_PROTEINS[pi % GEN_PROTEINS.length];
+    const carb = GEN_CARBS[ci % GEN_CARBS.length];
+    const veg = GEN_VEGGIES[vi % GEN_VEGGIES.length];
+    const method = methods[mi % methods.length];
+    const key = protein.n+'|'+carb.n+'|'+veg.n+'|'+method;
+    if(!used.has(key)){
+      used.add(key);
+      combos.push({protein, carb, veg, method});
+    }
+    pi++; ci+=2; vi+=3; mi++;
+  }
+  return combos;
+}
+function comboToMeal(combo){
+  const {protein, carb, veg, method} = combo;
+  return {
+    name: `${capFirst(protein.n)} ${method}, ${carb.n} et ${veg.n}`,
+    foods: [protein.n, carb.n, veg.n],
+    recipe: {
+      ingredients: [`Une portion de ${protein.n}`, `80-100 g de ${carb.n}`, `Une portion de ${veg.n}`, "Un filet d'huile d'olive"],
+      steps: [
+        `Fais cuire ${carb.art}${carb.n} selon les instructions du paquet.`,
+        `Prépare ${protein.art}${protein.n} ${method}, à la poêle ou au four selon le cas.`,
+        `Fais cuire ${veg.art}${veg.n} à la vapeur ou à la poêle, puis sers le tout avec ${carb.art}${carb.n} et ${protein.art}${protein.n}.`
+      ]
+    }
+  };
+}
+try{
+  LUNCHES.push(...generateCombos(Math.max(0, 150 - LUNCHES.length), LUNCH_METHODS).map(comboToMeal));
+  DINNERS.push(...generateCombos(Math.max(0, 150 - DINNERS.length), DINNER_METHODS).map(comboToMeal));
+}catch(e){ console.error('Erreur génération de menus :', e); }
+
+function isMealAllowed(meal){
+  const excluded = meal.foods.some(f => dislikedFoods.has(normalizeFood(f)) || blockedFoods.has(normalizeFood(f)));
+  if(excluded) return false;
+  if(meal.requires && !unlockedFoods.has(normalizeFood(meal.requires))) return false;
+  return true;
+}
+
+function poolFor(slot){
+  const base = slot==='breakfast' ? BREAKFASTS : slot==='lunch' ? LUNCHES : DINNERS;
+  const bonus = BONUS[slot].filter(isMealAllowed);
+  return [...base.filter(isMealAllowed), ...bonus];
+}
+
+function renderExcludedPanel(){
+  const panel = document.getElementById('excludedPanel');
+  const chipsEl = document.getElementById('excludedChips');
+  if(dislikedFoods.size === 0){ panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+  chipsEl.innerHTML = [...dislikedFoods].sort().map(f=>`
+    <span class="excl-chip">${f}<button data-food="${f}">×</button></span>
+  `).join('');
+  chipsEl.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      dislikedFoods.delete(btn.dataset.food);
+      await storeSet(pk('fodmap-disliked-foods'), JSON.stringify([...dislikedFoods]), true);
+      renderExcludedPanel();
+      renderMenus();
+    });
+  });
+}
+
+async function toggleDislike(food){
+  const key = normalizeFood(food);
+  if(dislikedFoods.has(key)) dislikedFoods.delete(key); else dislikedFoods.add(key);
+  await storeSet(pk('fodmap-disliked-foods'), JSON.stringify([...dislikedFoods]), true);
+  renderExcludedPanel();
+  renderMenus();
+}
+
+function renderRecipeBody(recipe){
+  return `
+    <div class="recipe-body" style="display:none;">
+      <h5>Ingrédients</h5>
+      <ul>${recipe.ingredients.map(i=>`<li>${i}</li>`).join('')}</ul>
+      <h5>Préparation</h5>
+      <ol>${recipe.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+    </div>`;
+}
+
+const MEAL_SECTIONS = [
+  {key:'breakfast', label:'🌅 Petit-déjeuner'},
+  {key:'lunch', label:'🍽️ Déjeuner'},
+  {key:'dinner', label:'🌙 Dîner'},
+];
+let activeMealSlot = 'breakfast';
+
+function renderMealTabs(){
+  const wrap = document.getElementById('mealTabs');
+  wrap.innerHTML = MEAL_SECTIONS.map(sec=>{
+    const count = poolFor(sec.key).length;
+    return `<button class="meal-tab-btn ${activeMealSlot===sec.key?'active':''}" data-slot="${sec.key}">${sec.label} <span class="count">(${count})</span></button>`;
+  }).join('');
+  wrap.querySelectorAll('.meal-tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      activeMealSlot = btn.dataset.slot;
+      renderMenus();
+    });
+  });
+}
+
+function renderMenus(){
+  renderMealTabs();
+  const query = document.getElementById('menuSearch').value.trim().toLowerCase();
+  const wrap = document.getElementById('menuList');
+  const countEl = document.getElementById('menuCount');
+  const sec = MEAL_SECTIONS.find(s=>s.key===activeMealSlot);
+
+  let pool = poolFor(sec.key);
+  const totalEligible = pool.length;
+  if(query){
+    pool = pool.filter(m=> m.name.toLowerCase().includes(query) || m.foods.some(f=>f.toLowerCase().includes(query)));
+  }
+
+  countEl.textContent = query
+    ? `${pool.length} résultat${pool.length>1?'s':''} pour « ${query} » sur ${totalEligible} proposition${totalEligible>1?'s':''} au total`
+    : `${totalEligible} proposition${totalEligible>1?'s':''}`;
+
+  const cardsHtml = pool.length ? pool.map((meal, idx)=>`
+      <div class="menu-card" data-slot="${sec.key}" data-idx="${idx}">
+        <div class="menu-card-head">
+          <div class="menu-card-name">${meal.name}</div>
+          <div class="menu-card-toggle">Voir la recette ▾</div>
+        </div>
+        <div class="ing-row">
+          ${meal.foods.map(f=>`<span class="ing-chip${dislikedFoods.has(normalizeFood(f))?' disliked':''}" data-food="${f}">${f}</span>`).join('')}
+        </div>
+        ${renderRecipeBody(meal.recipe)}
+      </div>`).join('')
+    : (query
+        ? `<div class="empty-state">Aucun repas ne correspond à « ${query} » dans cette catégorie.</div>`
+        : "<div class=\"empty-state\">Trop d'aliments exclus pour proposer une idée ici — pense à en réintégrer certains dans le bandeau ci-dessus.</div>");
+
+  wrap.innerHTML = `<div class="menu-section"><div class="menu-grid">${cardsHtml}</div></div>`;
+
+  wrap.querySelectorAll('.menu-card').forEach(card=>{
+    const head = card.querySelector('.menu-card-head');
+    const body = card.querySelector('.recipe-body');
+    head.addEventListener('click', ()=>{
+      const isOpen = body.style.display === 'block';
+      body.style.display = isOpen ? 'none' : 'block';
+      head.querySelector('.menu-card-toggle').textContent = isOpen ? 'Voir la recette ▾' : 'Masquer la recette ▴';
+    });
+  });
+  wrap.querySelectorAll('.ing-chip').forEach(chip=>{
+    chip.addEventListener('click', (e)=>{ e.stopPropagation(); toggleDislike(chip.dataset.food); });
+  });
+}
+document.getElementById('menuSearch').addEventListener('input', renderMenus);
+
+/* ============================================================
+   TAB 3 — JOURNAL
+   ============================================================ */
+let journalEntries = [];
+
+function painMeta(level){
+  if(level <= 2) return {label:"Aucune douleur", face:"low"};
+  if(level <= 4) return {label:"Légère gêne", face:"low"};
+  if(level <= 6) return {label:"Douleur modérée", face:"moderate"};
+  if(level <= 8) return {label:"Douleur forte", face:"high"};
+  return {label:"Douleur intense", face:"high"};
+}
+
+const painRange = document.getElementById('painRange');
+const painFace = document.getElementById('painFace');
+const painLabel = document.getElementById('painLabel');
+function updatePainLive(){
+  const v = parseInt(painRange.value, 10);
+  const meta = painMeta(v);
+  painFace.className = 'face sm ' + meta.face;
+  painLabel.textContent = `${v} / 10 — ${meta.label}`;
+}
+painRange.addEventListener('input', updatePainLive);
+updatePainLive();
+
+document.getElementById('entryDate').valueAsDate = today;
+
+document.getElementById('entryForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const date = document.getElementById('entryDate').value;
+  const foodsRaw = document.getElementById('entryFoods').value;
+  const foods = foodsRaw.split(',').map(s=>s.trim()).filter(Boolean);
+  const pain = parseInt(painRange.value, 10);
+  const notes = document.getElementById('entryNotes').value.trim();
+
+  journalEntries.push({ id: Date.now(), date, foods, pain, notes });
+  await storeSet(pk('fodmap-journal-entries'), JSON.stringify(journalEntries), true);
+
+  document.getElementById('entryFoods').value = '';
+  document.getElementById('entryNotes').value = '';
+  painRange.value = 0;
+  updatePainLive();
+
+  renderJournal();
+});
+
+function renderJournal(){
+  const list = document.getElementById('entriesList');
+  const sorted = [...journalEntries].sort((a,b)=> b.date.localeCompare(a.date) || b.id - a.id);
+
+  if(sorted.length===0){
+    list.innerHTML = '<div class="empty-state">Aucune entrée pour le moment — le premier repas noté apparaîtra ici.</div>';
+  } else {
+    list.innerHTML = sorted.map(en=>{
+      const meta = painMeta(en.pain);
+      return `
+      <div class="entry" data-id="${en.id}">
+        <div class="when">${formatDate(en.date)}</div>
+        <div class="body">
+          <div class="tags">${en.foods.map(f=>`<span class="tag">${f}</span>`).join('')}</div>
+          <div style="display:flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--ink-soft);">
+            <span class="face sm ${meta.face}"></span> ${en.pain}/10 — ${meta.label}
+          </div>
+          ${en.notes ? `<div class="notes">${en.notes}</div>` : ''}
+        </div>
+        <button class="del" data-id="${en.id}" title="Supprimer">×</button>
+      </div>`;
+    }).join('');
+  }
+
+  list.querySelectorAll('.del').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const id = parseInt(btn.dataset.id, 10);
+      journalEntries = journalEntries.filter(e=>e.id !== id);
+      await storeSet(pk('fodmap-journal-entries'), JSON.stringify(journalEntries), true);
+      renderJournal();
+    });
+  });
+
+  renderWatchList();
+}
+
+function renderWatchList(){
+  const box = document.getElementById('watchList');
+  const items = document.getElementById('watchItems');
+  const stats = {};
+  journalEntries.forEach(en=>{
+    en.foods.forEach(f=>{
+      const key = f.toLowerCase();
+      if(!stats[key]) stats[key] = { count:0, sum:0, label:f };
+      stats[key].count += 1;
+      stats[key].sum += en.pain;
+    });
+  });
+  const arr = Object.values(stats)
+    .filter(s=>s.count >= 2)
+    .map(s=>({ ...s, avg: s.sum / s.count }))
+    .sort((a,b)=> b.avg - a.avg);
+
+  if(arr.length === 0){ box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  items.innerHTML = arr.slice(0, 10).map(s=>{
+    const meta = painMeta(Math.round(s.avg));
+    return `
+    <div class="watch-item">
+      <span class="face sm ${meta.face}"></span>
+      <div class="wname">${s.label}</div>
+      <div class="wmeta">douleur moy. ${s.avg.toFixed(1)}/10 · ${s.count} jour${s.count>1?'s':''}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   TAB 4 — RÉINTRODUCTION
+   ============================================================ */
+let reintroTests = [];
+
+// Modèles de recettes génériques par catégorie FODMAP, pour proposer des idées
+// de menus avec l'aliment en cours de test (2-3 jours de test = 2-3 idées).
+const RECIPE_TEMPLATES = {
+  "Fruits": [
+    {name:"Salade de fruits avec {food}", ingredients:["100 g de {food}","1 kiwi","une poignée de fraises","quelques feuilles de menthe"], steps:["Coupe {food} et les autres fruits en morceaux.","Mélange dans un bol avec la menthe ciselée.","Sers frais, éventuellement avec un yaourt sans lactose."]},
+    {name:"{Food} et yaourt sans lactose", ingredients:["1 portion de {food}","150 g de yaourt sans lactose","1 c. à c. de graines de chia"], steps:["Coupe {food} en petits morceaux.","Verse le yaourt dans un bol et ajoute {food}.","Parsème de graines de chia avant de servir."]},
+    {name:"Compote maison de {food}", ingredients:["200 g de {food}","un filet de sirop d'érable (optionnel)","un peu d'eau"], steps:["Coupe {food} en morceaux dans une casserole avec un fond d'eau.","Laisse cuire à feu doux 10-15 minutes.","Écrase ou mixe, sucre légèrement si besoin."]},
+  ],
+  "Légumes": [
+    {name:"{Food} rôti(e) au four", ingredients:["200 g de {food}","1 c. à s. d'huile d'olive","sel, poivre, thym"], steps:["Coupe {food} en morceaux réguliers.","Mélange avec l'huile d'olive et les herbes.","Fais rôtir au four 20-25 min à 200°C."]},
+    {name:"Poêlée de {food}, riz et poulet", ingredients:["150 g de {food}","100 g de riz basmati","1 blanc de poulet","huile d'olive"], steps:["Fais cuire le riz selon les instructions.","Poêle le poulet en dés dans l'huile d'olive.","Ajoute {food} coupé(e) en morceaux, fais revenir 5-7 min et sers avec le riz."]},
+    {name:"Soupe de {food}", ingredients:["300 g de {food}","huile infusée à l'ail (filtrée)","bouillon maison sans oignon/ail","sel, poivre"], steps:["Fais revenir {food} dans un peu d'huile infusée.","Ajoute le bouillon et laisse mijoter 20 minutes.","Mixe jusqu'à obtenir une texture lisse."]},
+  ],
+  "Féculents & céréales": [
+    {name:"{Food}, poulet grillé et légumes vapeur", ingredients:["100 g de {food}","1 blanc de poulet","courgette et carotte vapeur","huile d'olive"], steps:["Fais cuire {food} selon les instructions.","Grille le poulet à la poêle.","Sers avec les légumes vapeur."]},
+    {name:"Salade fraîche de {food}", ingredients:["100 g de {food} cuit(e) et refroidi(e)","tomate","concombre","feta (petite quantité)"], steps:["Mélange {food} avec la tomate et le concombre en dés.","Ajoute la feta émiettée.","Assaisonne d'huile d'olive et d'un filet de citron."]},
+    {name:"{Food} sauté(e) aux crevettes et gingembre", ingredients:["100 g de {food}","150 g de crevettes","gingembre frais","huile d'olive"], steps:["Fais cuire {food} puis réserve.","Fais sauter les crevettes avec le gingembre.","Ajoute {food} et mélange 2-3 minutes."]},
+  ],
+  "Légumineuses & protéines": [
+    {name:"{Food}, riz et légumes rôtis", ingredients:["100 g de {food}","100 g de riz","carotte et courgette rôties","huile d'olive"], steps:["Fais cuire {food} et le riz séparément.","Fais rôtir les légumes au four.","Sers le tout ensemble."]},
+    {name:"Salade de {food}, tomate et feta", ingredients:["100 g de {food} cuit(e)","tomate","feta (petite quantité)","huile d'olive, persil"], steps:["Mélange {food} avec la tomate en dés.","Ajoute la feta émiettée et le persil.","Assaisonne d'huile d'olive avant de servir."]},
+    {name:"Curry léger de {food}", ingredients:["100 g de {food}","lait de coco (petite quantité)","curcuma, cumin","riz pour l'accompagnement"], steps:["Fais chauffer le lait de coco avec les épices.","Ajoute {food} et laisse mijoter 10 minutes.","Sers avec du riz."]},
+  ],
+  "Produits laitiers": [
+    {name:"{Food} avec fruits rouges et granola sans gluten", ingredients:["150 g de {food}","fraises et myrtilles","granola sans gluten"], steps:["Verse {food} dans un bol.","Ajoute les fruits rouges coupés.","Termine avec le granola sans gluten."]},
+    {name:"Tartine avec {food}", ingredients:["1 tranche de pain sans gluten","{food}","un filet d'huile d'olive ou de miel selon le goût"], steps:["Fais griller la tranche de pain sans gluten.","Étale {food} dessus.","Ajoute la touche choisie et déguste."]},
+    {name:"{Food} dans une sauce pour pâtes sans gluten", ingredients:["100 g de pâtes sans gluten","{food}","poivre, herbes de Provence"], steps:["Fais cuire les pâtes sans gluten.","Fais chauffer doucement {food} pour obtenir une sauce.","Mélange avec les pâtes et assaisonne."]},
+  ],
+  "Viandes, poissons & œufs": [
+    {name:"{Food} grillé(e) simplement", ingredients:["150 g de {food}","huile d'olive","herbes de Provence","riz ou pommes de terre"], steps:["Assaisonne {food} avec l'huile d'olive et les herbes.","Fais cuire à la poêle ou au four.","Sers avec du riz ou des pommes de terre."]},
+    {name:"{Food}, légumes rôtis", ingredients:["150 g de {food}","carotte, courgette, poivron rouge","huile d'olive"], steps:["Fais cuire {food} à la poêle ou au four.","Fais rôtir les légumes.","Sers ensemble."]},
+    {name:"Salade complète avec {food}", ingredients:["{food}","laitue, tomate, concombre","huile d'olive, citron"], steps:["Fais cuire {food} si nécessaire, laisse tiédir.","Mélange avec les légumes coupés.","Assaisonne d'huile d'olive et de citron."]},
+  ],
+  "Noix & graines": [
+    {name:"Porridge d'avoine avec {food}", ingredients:["flocons d'avoine (petite portion)","lait sans lactose","{food}"], steps:["Fais cuire les flocons d'avoine avec le lait sans lactose.","Verse dans un bol.","Parsème de {food} avant de servir."]},
+    {name:"Salade de quinoa avec {food}", ingredients:["100 g de quinoa cuit","concombre, tomate","{food}","huile d'olive"], steps:["Mélange le quinoa avec le concombre et la tomate en dés.","Ajoute {food}.","Assaisonne d'huile d'olive."]},
+    {name:"Mélange maison de {food}", ingredients:["{food}","graines de courge","graines de tournesol"], steps:["Mélange {food} avec les autres graines.","Conserve dans un bocal hermétique.","À grignoter en petite quantité dans la journée."]},
+  ],
+  "Édulcorants": [
+    {name:"Yaourt sans lactose sucré au {food}", ingredients:["150 g de yaourt sans lactose","{food}","quelques fruits rouges"], steps:["Verse le yaourt dans un bol.","Ajoute {food} selon le goût.","Termine avec quelques fruits rouges."]},
+    {name:"Porridge d'avoine avec {food}", ingredients:["flocons d'avoine (petite portion)","lait sans lactose","{food}"], steps:["Fais cuire les flocons d'avoine dans le lait sans lactose.","Verse dans un bol.","Ajoute {food} avant de servir."]},
+    {name:"Compote sucrée au {food}", ingredients:["fruits pauvres en FODMAP (fraise, myrtille)","{food}","un peu d'eau"], steps:["Fais cuire les fruits avec un peu d'eau à feu doux.","Écrase ou mixe.","Sucre avec {food} selon le goût."]},
+  ],
+  "Boissons": [
+    {name:"{Food} au petit-déjeuner", ingredients:["{food}","un repas faible en FODMAP au choix"], steps:["Sers {food} en accompagnement du petit-déjeuner.","Note comment le ventre réagit dans les heures qui suivent."]},
+    {name:"{Food} en accompagnement du déjeuner", ingredients:["{food}"], steps:["Sers {food} pendant le déjeuner, en petite quantité au premier essai.","Observe les éventuels symptômes dans l'après-midi."]},
+    {name:"{Food} en fin de repas", ingredients:["{food}"], steps:["Sers {food} après le dîner.","Note les sensations avant de dormir et le lendemain matin."]},
+  ],
+  "Condiments & sauces": [
+    {name:"Poulet grillé et {food}", ingredients:["1 blanc de poulet","{food}","riz ou pommes de terre"], steps:["Fais griller le poulet à la poêle.","Nappe de {food} en fin de cuisson.","Sers avec du riz ou des pommes de terre."]},
+    {name:"Pâtes sans gluten avec {food}", ingredients:["100 g de pâtes sans gluten","{food}","parmesan (optionnel)"], steps:["Fais cuire les pâtes sans gluten.","Mélange avec {food}.","Ajoute un peu de parmesan si tu veux."]},
+    {name:"Salade composée assaisonnée au {food}", ingredients:["laitue, tomate, concombre","{food}"], steps:["Mélange les légumes coupés.","Assaisonne avec {food}.","Sers immédiatement."]},
+  ],
+  "Épices & herbes": [
+    {name:"Poulet ou riz assaisonné au {food}", ingredients:["1 blanc de poulet ou 100 g de riz","{food}","huile d'olive"], steps:["Fais cuire le poulet ou le riz.","Assaisonne généreusement avec {food}.","Sers chaud."]},
+    {name:"Légumes rôtis au {food}", ingredients:["carotte, courgette, poivron rouge","{food}","huile d'olive"], steps:["Coupe les légumes en morceaux.","Mélange avec l'huile d'olive et {food}.","Fais rôtir au four 20 minutes à 200°C."]},
+    {name:"Soupe relevée au {food}", ingredients:["légumes faibles en FODMAP au choix","{food}","bouillon maison"], steps:["Fais cuire les légumes dans le bouillon.","Ajoute {food} en fin de cuisson.","Mixe si besoin et sers chaud."]},
+  ],
+  "default": [
+    {name:"{Food} avec riz et légumes vapeur", ingredients:["100 g de {food}","100 g de riz","courgette et carotte vapeur"], steps:["Fais cuire {food} selon sa nature (poêle, four ou eau).","Fais cuire le riz et les légumes vapeur en parallèle.","Sers le tout ensemble."]},
+    {name:"Salade composée avec {food}", ingredients:["laitue, tomate, concombre","{food}","huile d'olive"], steps:["Mélange les légumes coupés en morceaux.","Ajoute {food}.","Assaisonne d'huile d'olive avant de servir."]},
+    {name:"{Food} avec pommes de terre et légumes rôtis", ingredients:["{food}","pommes de terre","carotte, courgette","huile d'olive"], steps:["Fais rôtir les pommes de terre et les légumes.","Prépare {food} séparément selon sa nature.","Sers le tout ensemble."]},
+  ],
+};
+
+function templateFill(str, food){
+  return str.split('{food}').join(food).split('{Food}').join(capFirst(food));
+}
+function recipesForFood(food){
+  const match = getFoodInfo(food);
+  const templates = RECIPE_TEMPLATES[match ? match.c : null] || RECIPE_TEMPLATES.default;
+  return templates.map(t=>({
+    name: templateFill(t.name, food),
+    ingredients: t.ingredients.map(i=>templateFill(i, food)),
+    steps: t.steps.map(s=>templateFill(s, food)),
+  }));
+}
+
+// ----- sélecteur d'aliment coloré (remplace le datalist natif) -----
+const reintroFoodInput = document.getElementById('reintroFood');
+const foodPickerResults = document.getElementById('foodPickerResults');
+const testableFoods = FOODS.filter(f=> f.l === 'high');
+
+function renderFoodPicker(){
+  const q = reintroFoodInput.value.trim().toLowerCase();
+  const list = testableFoods.filter(f=> !q || f.n.toLowerCase().includes(q)).slice(0, 40);
+  if(list.length === 0){ foodPickerResults.classList.remove('show'); return; }
+  foodPickerResults.innerHTML = list.map(f=>`
+    <div class="fp-item" data-name="${f.n}">
+      <span class="face sm ${f.l}"></span> ${f.n}
+      <span class="fp-cat">${f.l === 'moderate' ? 'portion limitée' : 'à éviter'}</span>
+    </div>`).join('');
+  foodPickerResults.classList.add('show');
+  foodPickerResults.querySelectorAll('.fp-item').forEach(item=>{
+    item.addEventListener('mousedown', (e)=>{ // mousedown pour précéder le blur de l'input
+      e.preventDefault();
+      reintroFoodInput.value = item.dataset.name;
+      foodPickerResults.classList.remove('show');
+    });
+  });
+}
+reintroFoodInput.addEventListener('focus', renderFoodPicker);
+reintroFoodInput.addEventListener('input', renderFoodPicker);
+reintroFoodInput.addEventListener('blur', ()=>{ setTimeout(()=> foodPickerResults.classList.remove('show'), 150); });
+
+document.getElementById('reintroStart').valueAsDate = today;
+
+document.getElementById('reintroForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const food = reintroFoodInput.value.trim();
+  const start = document.getElementById('reintroStart').value;
+  const duration = Math.max(1, Math.min(7, parseInt(document.getElementById('reintroDuration').value, 10) || 3));
+  if(!food) return;
+
+  reintroTests.push({
+    id: Date.now(), food, start, duration,
+    dailyPain: {}, status: 'active', notes: ''
+  });
+  await storeSet(pk('fodmap-reintro-tests'), JSON.stringify(reintroTests), true);
+
+  reintroFoodInput.value = '';
+  document.getElementById('reintroDuration').value = 3;
+  renderTests();
+});
+
+function recomputeBlockedUnlocked(){
+  blockedFoods = new Set();
+  unlockedFoods = new Set();
+  const latestByFood = {};
+  reintroTests.forEach(t=>{
+    if(t.status === 'ok' || t.status === 'problem'){
+      latestByFood[normalizeFood(t.food)] = t;
+    }
+  });
+  Object.values(latestByFood).forEach(t=>{
+    if(t.status === 'problem') blockedFoods.add(normalizeFood(t.food));
+    if(t.status === 'ok') unlockedFoods.add(normalizeFood(t.food));
+  });
+}
+
+function finishTest(id, forcedStatus){
+  const test = reintroTests.find(t=>t.id===id);
+  if(!test) return;
+  if(forcedStatus){
+    test.status = forcedStatus;
+  } else {
+    const painValues = Object.values(test.dailyPain);
+    const maxPain = painValues.length ? Math.max(...painValues) : 0;
+    test.status = maxPain >= 5 ? 'problem' : 'ok';
+  }
+}
+
+function renderTests(){
+  recomputeBlockedUnlocked();
+  const wrap = document.getElementById('testsList');
+  const sorted = [...reintroTests].sort((a,b)=> b.start.localeCompare(a.start) || b.id - a.id);
+
+  if(sorted.length === 0){
+    wrap.innerHTML = '<div class="empty-state">Aucun test en cours — ajoute le premier aliment à réintroduire ci-dessus.</div>';
+  } else {
+    wrap.innerHTML = sorted.map(test=>{
+      const startD = new Date(test.start + 'T00:00:00');
+      const endD = addDays(startD, test.duration - 1);
+      const statusLabel = test.status==='active' ? 'En cours' : test.status==='ok' ? 'OK, réintégré' : 'Problématique';
+      const info = getFoodInfo(test.food);
+      const days = [];
+      for(let i=0;i<test.duration;i++){ days.push(addDays(startD, i)); }
+      const daysHtml = days.map(d=>{
+        const iso = isoDate(d);
+        const future = d > today;
+        const val = (typeof test.dailyPain[iso] === 'undefined') ? '' : test.dailyPain[iso];
+        return `
+        <div class="test-day ${future?'future':''}">
+          <div class="tdate">${d.toLocaleDateString('fr-FR',{weekday:'short', day:'2-digit', month:'2-digit'})}</div>
+          <input type="number" min="0" max="10" placeholder="douleur" value="${val}" ${future?'disabled':''}
+                 data-test="${test.id}" data-date="${iso}">
+        </div>`;
+      }).join('');
+
+      const recipes = recipesForFood(test.food).slice(0, Math.max(2, Math.min(3, test.duration)));
+      const recipesHtml = `
+        <div class="test-recipes">
+          <h5>Idées de repas avec « ${test.food} » pendant le test</h5>
+          <div class="mini-recipe-grid">
+            ${recipes.map((r, ri)=>`
+              <div class="mini-recipe" data-test="${test.id}" data-ri="${ri}">
+                <div class="mr-name">${r.name}</div>
+                <div class="mr-toggle">Voir la recette ▾</div>
+                <div class="recipe-body" style="display:none;">
+                  <h5>Ingrédients</h5>
+                  <ul>${r.ingredients.map(i=>`<li>${i}</li>`).join('')}</ul>
+                  <h5>Préparation</h5>
+                  <ol>${r.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>`;
+
+      return `
+      <div class="test-card" data-id="${test.id}">
+        <div class="test-head">
+          <div>
+            <div class="tname-row">
+              ${info ? `<span class="face sm ${info.l}"></span>` : ''}
+              <span class="tname">${test.food}</span>
+            </div>
+            <div class="trange">${formatDate(test.start)} → ${formatDate(isoDate(endD))}${info ? ` · à l'origine : ${info.l==='moderate'?'portion limitée':'à éviter'}` : ''}</div>
+          </div>
+          <span class="status-badge ${test.status}">${statusLabel}</span>
+        </div>
+        <div class="test-days">${daysHtml}</div>
+        <div class="test-actions">
+          <button class="secondary" data-action="finish-auto" data-id="${test.id}">Terminer et classer automatiquement</button>
+          <button class="secondary" data-action="mark-ok" data-id="${test.id}">Marquer OK</button>
+          <button class="danger-outline" data-action="mark-problem" data-id="${test.id}">Marquer problématique</button>
+          <button class="secondary" data-action="delete" data-id="${test.id}">Supprimer</button>
+        </div>
+        ${recipesHtml}
+      </div>`;
+    }).join('');
+  }
+
+  wrap.querySelectorAll('input[type="number"]').forEach(inp=>{
+    inp.addEventListener('change', async ()=>{
+      const id = parseInt(inp.dataset.test, 10);
+      const test = reintroTests.find(t=>t.id===id);
+      if(!test) return;
+      const v = inp.value === '' ? null : Math.max(0, Math.min(10, parseInt(inp.value,10)));
+      if(v === null) delete test.dailyPain[inp.dataset.date];
+      else test.dailyPain[inp.dataset.date] = v;
+      await storeSet(pk('fodmap-reintro-tests'), JSON.stringify(reintroTests), true);
+    });
+  });
+
+  wrap.querySelectorAll('.mini-recipe').forEach(card=>{
+    const body = card.querySelector('.recipe-body');
+    const toggle = card.querySelector('.mr-toggle');
+    card.addEventListener('click', ()=>{
+      const isOpen = body.style.display === 'block';
+      body.style.display = isOpen ? 'none' : 'block';
+      toggle.textContent = isOpen ? 'Voir la recette ▾' : 'Masquer la recette ▴';
+    });
+  });
+
+  wrap.querySelectorAll('button[data-action]').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const id = parseInt(btn.dataset.id, 10);
+      const action = btn.dataset.action;
+      if(action === 'delete'){
+        reintroTests = reintroTests.filter(t=>t.id!==id);
+      } else if(action === 'finish-auto'){
+        finishTest(id, null);
+      } else if(action === 'mark-ok'){
+        finishTest(id, 'ok');
+      } else if(action === 'mark-problem'){
+        finishTest(id, 'problem');
+      }
+      await storeSet(pk('fodmap-reintro-tests'), JSON.stringify(reintroTests), true);
+      renderTests();
+      renderMenus();
+    });
+  });
+
+  renderReintroSummary();
+}
+
+function renderReintroSummary(){
+  recomputeBlockedUnlocked();
+  const problemEl = document.getElementById('problemList');
+  const okEl = document.getElementById('okList');
+
+  const latestByFood = {};
+  reintroTests.forEach(t=>{ if(t.status!=='active') latestByFood[normalizeFood(t.food)] = t; });
+  const problems = Object.values(latestByFood).filter(t=>t.status==='problem');
+  const oks = Object.values(latestByFood).filter(t=>t.status==='ok');
+
+  problemEl.innerHTML = problems.length ? problems.map(t=>`
+    <div class="watch-item">
+      <span class="face sm high"></span>
+      <div class="wname">${t.food}</div>
+      <div class="wmeta">testé le ${formatDate(t.start)}</div>
+    </div>`).join('') : '<div class="hint">Aucun aliment problématique identifié pour le moment.</div>';
+
+  okEl.innerHTML = oks.length ? oks.map(t=>`
+    <div class="watch-item">
+      <span class="face sm low"></span>
+      <div class="wname">${t.food}</div>
+      <div class="wmeta">testé le ${formatDate(t.start)}</div>
+    </div>`).join('') : '<div class="hint">Aucun aliment réintégré pour le moment.</div>';
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+(async function init(){
+  try{
+    const rememberedProfile = await storeGet('fodmap-remembered-profile-name', false);
+    if(rememberedProfile && PROFILES.includes(rememberedProfile)){
+      profile = rememberedProfile;
+    }
+  }catch(e){ /* pas grave, on reste sur 'default' */ }
+
+  document.querySelectorAll('.profile-choice').forEach(btn=>{
+    btn.addEventListener('click', ()=> applyProfile(btn.dataset.profile));
+  });
+  updateProfileLabel();
+
+  try{
+    await loadProfileData();
+  }catch(e){
+    // Même si le chargement des données échoue, les aliments et les menus
+    // restent utilisables : on affiche au moins un état vide propre.
+    renderExcludedPanel();
+    renderMenus();
+    renderTests();
+    renderJournal();
+  }
+})();
+</script>
+</body>
+</html>
