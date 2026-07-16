@@ -654,26 +654,35 @@
   <footer>Fait avec soin — les niveaux de FODMAP sont donnés à titre indicatif et la tolérance varie d'une personne à l'autre.</footer>
 </div>
 
-<!-- Firebase (synchronisation entre appareils) — voir la config FIREBASE_CONFIG en haut du script -->
+<!-- ============================================================
+     CONFIG FIREBASE — bloc isolé exprès. Si tu fais une erreur de
+     frappe en collant tes valeurs ici (guillemet oublié, virgule en
+     trop...), SEULE la synchronisation sera désactivée : le reste
+     de l'appli (onglets, menus, aliments...) continuera de marcher
+     normalement, car ce bloc est séparé du script principal.
+     Pour l'activer : https://console.firebase.google.com → ton
+     projet → ⚙️ Paramètres du projet → Général → "Vos applications"
+     (clique sur "</>" si aucune appli web n'existe encore) → copie
+     l'objet "firebaseConfig" et colle ses valeurs ci-dessous.
+     ============================================================ -->
+<script>
+window.FIREBASE_CONFIG = {
+  apiKey: "COLLE_ICI_TA_CLE_API",
+  authDomain: "COLLE_ICI_TON_PROJET.firebaseapp.com",
+  databaseURL: "https://COLLE_ICI_TON_PROJET-default-rtdb.firebaseio.com",
+  projectId: "COLLE_ICI_TON_PROJET",
+};
+</script>
+
+<!-- Firebase (synchronisation entre appareils) -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 <script>
 /* ============================================================
-   FIREBASE — synchronisation entre les téléphones (optionnelle).
-   Pour l'activer : va sur https://console.firebase.google.com,
-   ouvre ton projet → icône ⚙️ Paramètres du projet → onglet
-   "Général" → section "Vos applications" → si besoin, clique
-   sur "</>" pour enregistrer une appli web → copie l'objet
-   "firebaseConfig" et colle ses valeurs ci-dessous.
-   Active aussi Build → Realtime Database → Créer une base
-   (mode test suffit pour une appli familiale privée comme ici).
+   FIREBASE — connexion (facultative). Utilise la config définie
+   dans le bloc <script> isolé juste au-dessus.
    ============================================================ */
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBEht2CBK9HJVihWhcJEM1p5bOrFN07gdA",
-  authDomain: "fodmap-7f042.firebaseapp.com",
-  databaseURL: "https://fodmap-7f042-default-rtdb.firebaseio.com",
-  projectId: "fodmap-7f042",
-};
+const FIREBASE_CONFIG = (typeof window.FIREBASE_CONFIG === 'object' && window.FIREBASE_CONFIG) ? window.FIREBASE_CONFIG : {};
 
 let fbDb = null;
 let fbReady = false;
