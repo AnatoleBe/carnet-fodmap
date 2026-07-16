@@ -88,6 +88,9 @@
   .profile-choice.active{ background:var(--forest); color:#fff; border-color:var(--forest); }
   .profile-meta{ margin-top:8px; display:flex; flex-direction:column; gap:2px; }
   .profile-meta #profileCurrent{ font-weight:700; font-size:0.85rem; color:var(--forest); }
+  .sync-status{ font-size:0.76rem; font-weight:600; }
+  .sync-status.on{ color:var(--success-ink); }
+  .sync-status.off{ color:var(--accent-ink); }
   .profile-hint{ font-size:0.78rem; color:var(--ink-soft); }
 
   nav.tabs{ display:flex; gap:10px; margin-bottom:26px; flex-wrap:wrap; }
@@ -440,6 +443,7 @@
     </div>
     <div class="profile-meta">
       <span id="profileCurrent">Choisis ton prénom pour charger tes propres données</span>
+      <span id="syncStatus" class="sync-status"></span>
       <span class="profile-hint">Ce lien est partagé entre vous deux : chaque prénom garde ses propres goûts, son propre journal et ses propres tests, séparés de l'autre.</span>
     </div>
   </div>
@@ -650,7 +654,40 @@
   <footer>Fait avec soin — les niveaux de FODMAP sont donnés à titre indicatif et la tolérance varie d'une personne à l'autre.</footer>
 </div>
 
+<!-- Firebase (synchronisation entre appareils) — voir la config FIREBASE_CONFIG en haut du script -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 <script>
+/* ============================================================
+   FIREBASE — synchronisation entre les téléphones (optionnelle).
+   Pour l'activer : va sur https://console.firebase.google.com,
+   ouvre ton projet → icône ⚙️ Paramètres du projet → onglet
+   "Général" → section "Vos applications" → si besoin, clique
+   sur "</>" pour enregistrer une appli web → copie l'objet
+   "firebaseConfig" et colle ses valeurs ci-dessous.
+   Active aussi Build → Realtime Database → Créer une base
+   (mode test suffit pour une appli familiale privée comme ici).
+   ============================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBEht2CBK9HJVihWhcJEM1p5bOrFN07gdA",
+  authDomain: "fodmap-7f042.firebaseapp.com",
+  databaseURL: "https://fodmap-7f042-default-rtdb.firebaseio.com",
+  projectId: "fodmap-7f042",
+};
+
+let fbDb = null;
+let fbReady = false;
+function initFirebase(){
+  try{
+    if(typeof firebase === 'undefined') return;
+    if(!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.indexOf('COLLE_ICI') === 0) return;
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbDb = firebase.database();
+    fbReady = true;
+  }catch(e){ console.error('Firebase indisponible, on reste en local :', e); fbReady = false; }
+}
+initFirebase();
+
 /* ============================================================
    STORAGE
    ============================================================ */
@@ -659,6 +696,13 @@ let hasLocalStorage = false;
 try{ localStorage.setItem('__fodmap_test__','1'); localStorage.removeItem('__fodmap_test__'); hasLocalStorage = true; }catch(e){ hasLocalStorage = false; }
 const memoryStore = {};
 async function storeGet(key, shared){
+  if(fbReady){
+    try{
+      const snap = await fbDb.ref('fodmap/' + key).once('value');
+      const v = snap.val();
+      if(v !== null && typeof v !== 'undefined') return v;
+    }catch(e){ /* pas de réseau ou règles fermées : on retombe sur le local */ }
+  }
   if(hasStorage){
     try{ const r = await window.storage.get(key, !!shared); if(r) return r.value; }
     catch(e){ /* on retombe sur localStorage / mémoire */ }
@@ -670,6 +714,10 @@ async function storeGet(key, shared){
   return (typeof memoryStore[key] === 'undefined') ? null : memoryStore[key];
 }
 async function storeSet(key, value, shared){
+  if(fbReady){
+    try{ await fbDb.ref('fodmap/' + key).set(value); }
+    catch(e){ /* pas de réseau : les autres copies locales prennent le relais */ }
+  }
   if(hasStorage){
     try{ await window.storage.set(key, value, !!shared); }
     catch(e){ /* on continue quand même vers localStorage ci-dessous */ }
@@ -700,6 +748,13 @@ function updateProfileLabel(){
   document.querySelectorAll('.profile-choice').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.profile === profile);
   });
+  const syncEl = document.getElementById('syncStatus');
+  if(syncEl){
+    syncEl.textContent = fbReady
+      ? '🔄 Synchronisation entre téléphones activée'
+      : '⚠️ Synchronisation non configurée (données gardées sur cet appareil uniquement)';
+    syncEl.className = 'sync-status ' + (fbReady ? 'on' : 'off');
+  }
 }
 async function applyProfile(name){
   profile = PROFILES.includes(name) ? name : 'default';
@@ -707,6 +762,48 @@ async function applyProfile(name){
   updateProfileLabel();
   await loadProfileData();
 }
+let fbListeners = [];
+function detachRealtimeListeners(){
+  fbListeners.forEach(({ref, cb})=>{ try{ ref.off('value', cb); }catch(e){} });
+  fbListeners = [];
+}
+function attachRealtimeListeners(){
+  detachRealtimeListeners();
+  if(!fbReady) return;
+  const watched = [
+    'fodmap-disliked-foods', 'fodmap-reintro-tests', 'fodmap-journal-entries',
+    'fodmap-product-scans', 'fodmap-favorite-meals',
+  ];
+  watched.forEach(base=>{
+    const fullKey = pk(base);
+    const ref = fbDb.ref('fodmap/' + fullKey);
+    const cb = ref.on('value', (snap)=>{
+      const v = snap.val();
+      if(v === null || typeof v === 'undefined') return;
+      applyRemoteUpdate(base, v);
+    });
+    fbListeners.push({ ref, cb });
+  });
+}
+function applyRemoteUpdate(base, rawValue){
+  if(base === 'fodmap-disliked-foods'){
+    try{ dislikedFoods = new Set(JSON.parse(rawValue)); }catch(e){ return; }
+    renderExcludedPanel(); renderMenus();
+  } else if(base === 'fodmap-reintro-tests'){
+    try{ reintroTests = JSON.parse(rawValue); }catch(e){ return; }
+    recomputeBlockedUnlocked(); renderTests(); renderMenus();
+  } else if(base === 'fodmap-journal-entries'){
+    try{ journalEntries = JSON.parse(rawValue); }catch(e){ return; }
+    renderJournal();
+  } else if(base === 'fodmap-product-scans'){
+    try{ productScans = JSON.parse(rawValue); }catch(e){ return; }
+    renderScanHistory();
+  } else if(base === 'fodmap-favorite-meals'){
+    try{ favoriteMeals = new Set(JSON.parse(rawValue)); }catch(e){ return; }
+    renderMenus();
+  }
+}
+
 async function loadProfileData(){
   const dislikedRaw = await storeGet(pk('fodmap-disliked-foods'), true);
   dislikedFoods = new Set();
@@ -734,6 +831,8 @@ async function loadProfileData(){
   renderTests();
   renderJournal();
   renderScanHistory();
+
+  attachRealtimeListeners();
 }
 
 /* ============================================================
