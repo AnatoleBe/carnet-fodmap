@@ -667,10 +667,10 @@
      ============================================================ -->
 <script>
 window.FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBEht2CBK9HJVihWhcJEM1p5bOrFN07gdA",
-  authDomain: "fodmap-7f042.firebaseapp.com",
-  databaseURL: "https://fodmap-7f042-default-rtdb.firebaseio.com",
-  projectId: "fodmap-7f042",
+  apiKey: "COLLE_ICI_TA_CLE_API",
+  authDomain: "COLLE_ICI_TON_PROJET.firebaseapp.com",
+  databaseURL: "https://COLLE_ICI_TON_PROJET-default-rtdb.firebaseio.com",
+  projectId: "COLLE_ICI_TON_PROJET",
 };
 </script>
 
@@ -704,13 +704,27 @@ const hasStorage = typeof window.storage !== 'undefined';
 let hasLocalStorage = false;
 try{ localStorage.setItem('__fodmap_test__','1'); localStorage.removeItem('__fodmap_test__'); hasLocalStorage = true; }catch(e){ hasLocalStorage = false; }
 const memoryStore = {};
+
+// Empêche un appel Firebase qui traîne (mauvaise région, réseau capricieux...)
+// de bloquer indéfiniment le reste de l'application.
+function withTimeout(promise, ms){
+  return new Promise((resolve, reject)=>{
+    let settled = false;
+    const timer = setTimeout(()=>{ if(!settled){ settled = true; reject(new Error('timeout')); } }, ms);
+    promise.then(
+      (v)=>{ if(!settled){ settled = true; clearTimeout(timer); resolve(v); } },
+      (e)=>{ if(!settled){ settled = true; clearTimeout(timer); reject(e); } }
+    );
+  });
+}
+
 async function storeGet(key, shared){
   if(fbReady){
     try{
-      const snap = await fbDb.ref('fodmap/' + key).once('value');
+      const snap = await withTimeout(fbDb.ref('fodmap/' + key).once('value'), 4000);
       const v = snap.val();
       if(v !== null && typeof v !== 'undefined') return v;
-    }catch(e){ /* pas de réseau ou règles fermées : on retombe sur le local */ }
+    }catch(e){ /* pas de réseau, mauvaise région, ou trop lent : on retombe sur le local */ }
   }
   if(hasStorage){
     try{ const r = await window.storage.get(key, !!shared); if(r) return r.value; }
@@ -724,8 +738,8 @@ async function storeGet(key, shared){
 }
 async function storeSet(key, value, shared){
   if(fbReady){
-    try{ await fbDb.ref('fodmap/' + key).set(value); }
-    catch(e){ /* pas de réseau : les autres copies locales prennent le relais */ }
+    try{ await withTimeout(fbDb.ref('fodmap/' + key).set(value), 4000); }
+    catch(e){ /* pas de réseau ou trop lent : les copies locales prennent le relais */ }
   }
   if(hasStorage){
     try{ await window.storage.set(key, value, !!shared); }
@@ -814,24 +828,27 @@ function applyRemoteUpdate(base, rawValue){
 }
 
 async function loadProfileData(){
-  const dislikedRaw = await storeGet(pk('fodmap-disliked-foods'), true);
+  const [dislikedRaw, testsRaw, entriesRaw, scansRaw, favRaw] = await Promise.all([
+    storeGet(pk('fodmap-disliked-foods'), true),
+    storeGet(pk('fodmap-reintro-tests'), true),
+    storeGet(pk('fodmap-journal-entries'), true),
+    storeGet(pk('fodmap-product-scans'), true),
+    storeGet(pk('fodmap-favorite-meals'), true),
+  ]);
+
   dislikedFoods = new Set();
   if(dislikedRaw){ try{ dislikedFoods = new Set(JSON.parse(dislikedRaw)); }catch(e){ dislikedFoods = new Set(); } }
 
-  const testsRaw = await storeGet(pk('fodmap-reintro-tests'), true);
   reintroTests = [];
   if(testsRaw){ try{ reintroTests = JSON.parse(testsRaw); }catch(e){ reintroTests = []; } }
   recomputeBlockedUnlocked();
 
-  const entriesRaw = await storeGet(pk('fodmap-journal-entries'), true);
   journalEntries = [];
   if(entriesRaw){ try{ journalEntries = JSON.parse(entriesRaw); }catch(e){ journalEntries = []; } }
 
-  const scansRaw = await storeGet(pk('fodmap-product-scans'), true);
   productScans = [];
   if(scansRaw){ try{ productScans = JSON.parse(scansRaw); }catch(e){ productScans = []; } }
 
-  const favRaw = await storeGet(pk('fodmap-favorite-meals'), true);
   favoriteMeals = new Set();
   if(favRaw){ try{ favoriteMeals = new Set(JSON.parse(favRaw)); }catch(e){ favoriteMeals = new Set(); } }
 
@@ -2502,16 +2519,19 @@ document.getElementById('dislikeSearch').addEventListener('input', renderDislike
    INIT
    ============================================================ */
 (async function init(){
+  // Les écouteurs sont attachés en tout premier, sans rien attendre, pour que
+  // les boutons Patrick/Agathe répondent immédiatement même si Firebase est
+  // lent ou mal configuré (ne dépend d'aucun appel réseau).
+  document.querySelectorAll('.profile-choice').forEach(btn=>{
+    btn.addEventListener('click', ()=> applyProfile(btn.dataset.profile));
+  });
+
   try{
     const rememberedProfile = await storeGet('fodmap-remembered-profile-name', false);
     if(rememberedProfile && PROFILES.includes(rememberedProfile)){
       profile = rememberedProfile;
     }
   }catch(e){ /* pas grave, on reste sur 'default' */ }
-
-  document.querySelectorAll('.profile-choice').forEach(btn=>{
-    btn.addEventListener('click', ()=> applyProfile(btn.dataset.profile));
-  });
   updateProfileLabel();
 
   try{
