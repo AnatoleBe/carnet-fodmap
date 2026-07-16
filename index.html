@@ -204,7 +204,12 @@
     font-size:0.95rem;
     color:var(--ink);
     width:100%;
+    max-width:100%;
+    min-width:0;
+    box-sizing:border-box;
   }
+  textarea{ word-break:break-word; overflow-wrap:break-word; resize:vertical; }
+  input[type="date"]{ appearance:none; -webkit-appearance:none; }
   input[type="search"]{ flex:1; min-width:200px; width:auto; }
   input:focus, textarea:focus, select:focus{
     outline:2px solid var(--accent); outline-offset:1px; background:var(--surface);
@@ -280,6 +285,13 @@
   .menu-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:12px; }
   .menu-card{ background:var(--surface-alt); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
   .menu-card-head{ cursor:pointer; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .menu-card-actions{ flex:none; display:flex; align-items:center; gap:8px; }
+  .fav-star{
+    background:none; border:none; cursor:pointer; font-size:1.15rem; line-height:1; padding:0 2px;
+    color:var(--ink-soft); transition: transform .15s ease;
+  }
+  .fav-star.active{ color:var(--accent); }
+  .fav-star:hover{ transform: scale(1.15); }
   .menu-card-name{ font-weight:600; font-size:0.94rem; line-height:1.3; }
   .menu-card-toggle{ flex:none; font-size:0.74rem; color:var(--forest); font-weight:600; white-space:nowrap; margin-top:2px; }
   .ing-row{ display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
@@ -297,8 +309,9 @@
   .menu-hint{ font-size:0.82rem; color:var(--ink-soft); margin-bottom:16px; }
 
   /* ---------- journal tab ---------- */
-  .journal-form{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:8px; }
-  .journal-form .full{ grid-column: 1 / -1; }
+  .journal-form{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:8px; min-width:0; }
+  .journal-form > div{ min-width:0; }
+  .journal-form .full{ grid-column: 1 / -1; min-width:0; }
   label{ display:block; font-size:0.8rem; font-weight:600; color:var(--ink-soft); margin-bottom:6px; }
   input[type="range"]{ width:100%; accent-color:var(--forest); }
   .pain-live{ display:flex; align-items:center; gap:10px; margin-top:8px; }
@@ -387,8 +400,9 @@
   .test-day input[type="number"]{ width:100%; padding:6px 8px; font-size:0.85rem; }
   .test-day.future{ opacity:0.45; }
   .test-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
-  .reintro-form{ display:grid; grid-template-columns: 2fr 1fr 1fr; gap:14px; align-items:end; }
-  .reintro-form .full{ grid-column: 1/-1; }
+  .reintro-form{ display:grid; grid-template-columns: 2fr 1fr 1fr; gap:14px; align-items:end; min-width:0; }
+  .reintro-form > div{ min-width:0; }
+  .reintro-form .full{ grid-column: 1/-1; min-width:0; }
   .summary-cols{ display:grid; grid-template-columns: 1fr 1fr; gap:24px; margin-top:26px; }
   .test-recipes{ border-top:1px dashed var(--line); padding-top:12px; }
   .test-recipes h5{ margin:0 0 8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink-soft); }
@@ -454,7 +468,6 @@
         <input type="search" id="foodSearch" placeholder="Rechercher un aliment… (ex : ail, riz, pomme)">
       </div>
       <div class="chips" id="levelChips"></div>
-      <div class="chips" id="catChips"></div>
       <div class="food-count" id="foodCount"></div>
       <div class="food-grid" id="foodGrid"></div>
     </div>
@@ -642,18 +655,28 @@
    STORAGE
    ============================================================ */
 const hasStorage = typeof window.storage !== 'undefined';
+let hasLocalStorage = false;
+try{ localStorage.setItem('__fodmap_test__','1'); localStorage.removeItem('__fodmap_test__'); hasLocalStorage = true; }catch(e){ hasLocalStorage = false; }
 const memoryStore = {};
 async function storeGet(key, shared){
   if(hasStorage){
-    try{ const r = await window.storage.get(key, !!shared); return r ? r.value : null; }
-    catch(e){ return (typeof memoryStore[key] === 'undefined') ? null : memoryStore[key]; }
+    try{ const r = await window.storage.get(key, !!shared); if(r) return r.value; }
+    catch(e){ /* on retombe sur localStorage / mémoire */ }
+  }
+  if(hasLocalStorage){
+    try{ const v = localStorage.getItem(key); if(v !== null) return v; }
+    catch(e){ /* on retombe sur la mémoire */ }
   }
   return (typeof memoryStore[key] === 'undefined') ? null : memoryStore[key];
 }
 async function storeSet(key, value, shared){
   if(hasStorage){
-    try{ await window.storage.set(key, value, !!shared); return; }
-    catch(e){ /* fall through */ }
+    try{ await window.storage.set(key, value, !!shared); }
+    catch(e){ /* on continue quand même vers localStorage ci-dessous */ }
+  }
+  if(hasLocalStorage){
+    try{ localStorage.setItem(key, value); return; }
+    catch(e){ /* stockage plein ou indisponible : on retombe sur la mémoire */ }
   }
   memoryStore[key] = value;
 }
@@ -701,6 +724,10 @@ async function loadProfileData(){
   const scansRaw = await storeGet(pk('fodmap-product-scans'), true);
   productScans = [];
   if(scansRaw){ try{ productScans = JSON.parse(scansRaw); }catch(e){ productScans = []; } }
+
+  const favRaw = await storeGet(pk('fodmap-favorite-meals'), true);
+  favoriteMeals = new Set();
+  if(favRaw){ try{ favoriteMeals = new Set(JSON.parse(favRaw)); }catch(e){ favoriteMeals = new Set(); } }
 
   renderExcludedPanel();
   renderMenus();
@@ -771,7 +798,7 @@ const FOODS = [
   {n:"Litchi", c:"Fruits", l:"high"},
   {n:"Nectarine", c:"Fruits", l:"high"},
   {n:"Grenade", c:"Fruits", l:"moderate"},
-  {n:"Avocat", c:"Fruits", l:"moderate", x:"OK en petite quantité (~1/8)"},
+  {n:"Avocat", c:"Fruits", l:"moderate", x:"faible jusqu'à 30 g (1/8) ; toléré par la plupart jusqu'à 60 g (1/4) ; devient riche autour de 80 g (1/2 avocat)"},
 
   {n:"Carotte", c:"Légumes", l:"low"},
   {n:"Concombre", c:"Légumes", l:"low"},
@@ -785,15 +812,15 @@ const FOODS = [
   {n:"Aubergine", c:"Légumes", l:"low"},
   {n:"Haricot vert", c:"Légumes", l:"low"},
   {n:"Pomme de terre", c:"Légumes", l:"low"},
-  {n:"Patate douce", c:"Légumes", l:"moderate"},
-  {n:"Maïs doux", c:"Légumes", l:"moderate"},
+  {n:"Patate douce", c:"Légumes", l:"moderate", x:"faible jusqu'à 75 g (1/2 tasse) cuite ; devient riche au-delà de 140 g"},
+  {n:"Maïs doux", c:"Légumes", l:"moderate", x:"faible jusqu'à 1/2 épi (38 g) ; devient riche au-delà"},
   {n:"Gingembre", c:"Légumes", l:"low"},
   {n:"Ciboulette (partie verte)", c:"Légumes", l:"low"},
   {n:"Poireau (partie verte)", c:"Légumes", l:"low"},
   {n:"Fenouil (bulbe)", c:"Légumes", l:"low"},
   {n:"Radis", c:"Légumes", l:"low"},
   {n:"Chou rouge", c:"Légumes", l:"low"},
-  {n:"Chou vert", c:"Légumes", l:"moderate"},
+  {n:"Chou vert", c:"Légumes", l:"moderate", x:"faible jusqu'à 75 g (1 tasse) râpé ; devient riche au-delà"},
   {n:"Brocoli (têtes)", c:"Légumes", l:"low"},
   {n:"Courge butternut", c:"Légumes", l:"moderate"},
   {n:"Champignon de Paris", c:"Légumes", l:"high"},
@@ -807,7 +834,7 @@ const FOODS = [
   {n:"Asperge", c:"Légumes", l:"high"},
   {n:"Chou de Bruxelles", c:"Légumes", l:"high"},
   {n:"Betterave", c:"Légumes", l:"high"},
-  {n:"Céleri", c:"Légumes", l:"moderate"},
+  {n:"Céleri", c:"Légumes", l:"moderate", x:"faible jusqu'à 10 g environ (1/4 de branche) ; les portions courantes sont riches en fructanes"},
   {n:"Petits pois", c:"Légumes", l:"high"},
   {n:"Pois mange-tout", c:"Légumes", l:"moderate"},
 
@@ -819,7 +846,7 @@ const FOODS = [
   {n:"Polenta / farine de maïs", c:"Féculents & céréales", l:"low"},
   {n:"Pain sans gluten", c:"Féculents & céréales", l:"low"},
   {n:"Pâtes sans gluten (riz/maïs)", c:"Féculents & céréales", l:"low"},
-  {n:"Pain au levain (tranche fine)", c:"Féculents & céréales", l:"moderate"},
+  {n:"Pain au levain (tranche fine)", c:"Féculents & céréales", l:"moderate", x:"une tranche de 24-30 g reste faible grâce à la fermentation longue ; au-delà, les fructanes remontent"},
   {n:"Pain de blé classique", c:"Féculents & céréales", l:"high"},
   {n:"Pâtes de blé classiques", c:"Féculents & céréales", l:"high"},
   {n:"Couscous (blé)", c:"Féculents & céréales", l:"high"},
@@ -830,8 +857,8 @@ const FOODS = [
   {n:"Tofu ferme", c:"Légumineuses & protéines", l:"low"},
   {n:"Tempeh", c:"Légumineuses & protéines", l:"low"},
   {n:"Tofu soyeux", c:"Légumineuses & protéines", l:"moderate"},
-  {n:"Edamame (petite portion)", c:"Légumineuses & protéines", l:"moderate"},
-  {n:"Pois chiches en conserve, rincés (petite portion)", c:"Légumineuses & protéines", l:"moderate"},
+  {n:"Edamame (petite portion)", c:"Légumineuses & protéines", l:"moderate", x:"faible jusqu'à 100 g écossé ; devient riche en fructanes au-delà"},
+  {n:"Pois chiches en conserve, rincés (petite portion)", c:"Légumineuses & protéines", l:"moderate", x:"faible jusqu'à 42 g (1/4 tasse) rincés et égouttés ; grimpe vite en GOS au-delà"},
   {n:"Lentilles", c:"Légumineuses & protéines", l:"high"},
   {n:"Haricots rouges", c:"Légumineuses & protéines", l:"high"},
   {n:"Haricots blancs", c:"Légumineuses & protéines", l:"high"},
@@ -845,18 +872,27 @@ const FOODS = [
   {n:"Œufs", c:"Viandes, poissons & œufs", l:"low"},
   {n:"Charcuterie industrielle", c:"Viandes, poissons & œufs", l:"high", x:"vérifier ail/oignon sur l'étiquette"},
   {n:"Saucisses industrielles", c:"Viandes, poissons & œufs", l:"high", x:"souvent additionnées d'oignon/ail"},
+  {n:"Lardons nature (sans additifs)", c:"Viandes, poissons & œufs", l:"low", x:"faible jusqu'à environ 60 g (2-3 tranches) ; vérifie l'absence d'ail/oignon/miel ajoutés sur l'étiquette"},
+  {n:"Bacon nature (sans additifs)", c:"Viandes, poissons & œufs", l:"low", x:"faible jusqu'à environ 60 g (2 tranches) ; attention aux arômes et sucres ajoutés selon la marque"},
+  {n:"Jambon blanc nature", c:"Viandes, poissons & œufs", l:"low", x:"vérifier l'absence d'ail/oignon/dextrose en excès sur l'étiquette"},
+  {n:"Chorizo / salami", c:"Viandes, poissons & œufs", l:"high", x:"souvent à base d'ail et de piment fermenté"},
 
   {n:"Lait sans lactose", c:"Produits laitiers", l:"low"},
   {n:"Lait d'amande", c:"Produits laitiers", l:"low"},
   {n:"Lait de riz", c:"Produits laitiers", l:"low"},
   {n:"Lait de soja (protéines de soja)", c:"Produits laitiers", l:"low"},
-  {n:"Lait de coco (petite quantité)", c:"Produits laitiers", l:"moderate"},
+  {n:"Lait de coco (petite quantité)", c:"Produits laitiers", l:"moderate", x:"faible jusqu'à environ 60 ml (1/4 tasse) ; devient riche au-delà"},
   {n:"Yaourt sans lactose", c:"Produits laitiers", l:"low"},
   {n:"Yaourt de coco", c:"Produits laitiers", l:"low"},
   {n:"Fromages affinés (cheddar, brie, parmesan…)", c:"Produits laitiers", l:"low"},
   {n:"Feta (petite quantité)", c:"Produits laitiers", l:"low"},
   {n:"Beurre", c:"Produits laitiers", l:"low"},
-  {n:"Crème fraîche (petite quantité)", c:"Produits laitiers", l:"moderate"},
+  {n:"Crème fraîche épaisse (30%)", c:"Produits laitiers", l:"moderate", x:"faible jusqu'à 30 g (2 c. à s.) ; devient riche en lactose dès 40 g"},
+  {n:"Crème liquide entière / crème fouettée", c:"Produits laitiers", l:"moderate", x:"faible jusqu'à 60 g (1/4 tasse liquide, ou fouettée) ; devient riche au-delà"},
+  {n:"Crème allégée (12-15%)", c:"Produits laitiers", l:"moderate", x:"non testée officiellement ; par prudence, limiter comme la crème fraîche classique (30 g)"},
+  {n:"Crème sure (sour cream)", c:"Produits laitiers", l:"moderate", x:"faible jusqu'à 30 g (2 c. à s.) ; devient riche dès 60 g (1/4 tasse)"},
+  {n:"Crème de soja", c:"Produits laitiers", l:"high", x:"non testée officiellement mais déconseillée : le lait de soja à base de fèves entières est déjà riche dès 30 g"},
+  {n:"Fromage à tartiner ail & fines herbes (type Boursin)", c:"Produits laitiers", l:"moderate", x:"faible jusqu'à 20 g ; modéré à 30 g ; riche dès 40 g (à cause de l'ail)"},
   {n:"Lait de vache", c:"Produits laitiers", l:"high"},
   {n:"Yaourt nature (lait de vache)", c:"Produits laitiers", l:"high"},
   {n:"Fromage frais / cottage / ricotta", c:"Produits laitiers", l:"high"},
@@ -870,7 +906,7 @@ const FOODS = [
   {n:"Graines de tournesol", c:"Noix & graines", l:"low"},
   {n:"Graines de chia (petite quantité)", c:"Noix & graines", l:"low"},
   {n:"Graines de lin (petite quantité)", c:"Noix & graines", l:"low"},
-  {n:"Amandes (poignée, ~10)", c:"Noix & graines", l:"moderate"},
+  {n:"Amandes (10, soit 12 g)", c:"Noix & graines", l:"low", x:"faible jusqu'à 12 g (10 amandes) ; devient riche dès 20 amandes (24 g)"},
   {n:"Noix de cajou", c:"Noix & graines", l:"high"},
   {n:"Pistaches", c:"Noix & graines", l:"high"},
 
@@ -905,7 +941,7 @@ const FOODS = [
   {n:"Vinaigre balsamique", c:"Condiments & sauces", l:"low"},
   {n:"Moutarde", c:"Condiments & sauces", l:"low"},
   {n:"Mayonnaise nature", c:"Condiments & sauces", l:"low"},
-  {n:"Ketchup (petite quantité)", c:"Condiments & sauces", l:"moderate"},
+  {n:"Ketchup (petite quantité)", c:"Condiments & sauces", l:"moderate", x:"faible jusqu'à environ 15 g (1 c. à s.) ; le fructose s'accumule au-delà"},
   {n:"Sauce tomate industrielle", c:"Condiments & sauces", l:"high", x:"souvent à base d'ail/oignon"},
   {n:"Bouillon cube classique", c:"Condiments & sauces", l:"high", x:"souvent ail/oignon/extrait de levure"},
 
@@ -950,12 +986,12 @@ const FOODS = [
   {n:"Skyr nature", c:"Produits laitiers", l:"high"},
   {n:"Lait de chèvre", c:"Produits laitiers", l:"high"},
 
-  {n:"Noisettes (portion limitée, ~15)", c:"Noix & graines", l:"moderate"},
+  {n:"Noisettes (15, soit 20 g)", c:"Noix & graines", l:"moderate", x:"faible jusqu'à 15 noisettes (~20 g) ; devient riche au-delà"},
   {n:"Noix du Brésil", c:"Noix & graines", l:"low"},
   {n:"Noix de pécan", c:"Noix & graines", l:"low"},
 
   {n:"Sucre roux", c:"Édulcorants", l:"low"},
-  {n:"Confiture classique", c:"Édulcorants", l:"moderate"},
+  {n:"Confiture classique", c:"Édulcorants", l:"moderate", x:"faible jusqu'à 10 g (2 c. à c.) ; le fructose grimpe vite au-delà selon la teneur en fruits"},
 
   {n:"Eau gazeuse", c:"Boissons", l:"low"},
   {n:"Cidre", c:"Boissons", l:"high"},
@@ -973,8 +1009,6 @@ const FOODS = [
   {n:"Barres de céréales industrielles", c:"Sucreries & snacks", l:"high", x:"souvent blé, miel ou sirop de glucose-fructose : vérifier l'étiquette"},
 ];
 
-const CATS = [...new Set(FOODS.map(f=>f.c))];
-let activeCat = 'Tous';
 let activeLevel = 'all';
 const LEVEL_FILTERS = [
   {key:'all', label:'Tous les niveaux'},
@@ -993,31 +1027,13 @@ function renderLevelChips(){
   });
 }
 
-function renderChips(){
-  const el = document.getElementById('catChips');
-  el.innerHTML = '';
-  const all = document.createElement('span');
-  all.className = 'chip' + (activeCat==='Tous' ? ' active' : '');
-  all.textContent = 'Tous';
-  all.onclick = ()=>{ activeCat='Tous'; renderChips(); renderFoods(); };
-  el.appendChild(all);
-  CATS.forEach(c=>{
-    const chip = document.createElement('span');
-    chip.className = 'chip' + (activeCat===c ? ' active' : '');
-    chip.textContent = c;
-    chip.onclick = ()=>{ activeCat=c; renderChips(); renderFoods(); };
-    el.appendChild(chip);
-  });
-}
-
 function renderFoods(){
   const q = document.getElementById('foodSearch').value.trim().toLowerCase();
   const grid = document.getElementById('foodGrid');
   const filtered = FOODS.filter(f=>{
-    const matchCat = activeCat==='Tous' || f.c===activeCat;
     const matchLevel = activeLevel==='all' || f.l===activeLevel;
     const matchQ = !q || f.n.toLowerCase().includes(q);
-    return matchCat && matchLevel && matchQ;
+    return matchLevel && matchQ;
   }).sort((a,b)=> a.n.localeCompare(b.n, 'fr'));
 
   document.getElementById('foodCount').textContent = filtered.length + ' aliment' + (filtered.length>1?'s':'') + ' affiché' + (filtered.length>1?'s':'');
@@ -1039,7 +1055,6 @@ function renderFoods(){
 }
 document.getElementById('foodSearch').addEventListener('input', renderFoods);
 try{
-  renderChips();
   renderLevelChips();
   renderFoods();
 }catch(e){ console.error('Erreur au rendu de la liste des aliments :', e); }
@@ -1583,13 +1598,13 @@ function generateDesserts(target, seedOffset){
 }
 
 try{
-  LUNCHES.push(...generateMainMeals(Math.max(0, 300 - LUNCHES.length), 0));
-  DINNERS.push(...generateMainMeals(Math.max(0, 300 - DINNERS.length), 4));
-  BREAKFASTS.push(...generateBreakfasts(Math.max(0, 80 - BREAKFASTS.length), 0));
-  STARTERS_LUNCH.push(...generateStarters(Math.max(0, 100 - STARTERS_LUNCH.length), 0));
-  STARTERS_DINNER.push(...generateStarters(Math.max(0, 100 - STARTERS_DINNER.length), 4));
-  DESSERTS_LUNCH.push(...generateDesserts(Math.max(0, 100 - DESSERTS_LUNCH.length), 0));
-  DESSERTS_DINNER.push(...generateDesserts(Math.max(0, 100 - DESSERTS_DINNER.length), 4));
+  LUNCHES.push(...generateMainMeals(Math.max(0, 400 - LUNCHES.length), 0));
+  DINNERS.push(...generateMainMeals(Math.max(0, 400 - DINNERS.length), 4));
+  BREAKFASTS.push(...generateBreakfasts(Math.max(0, 120 - BREAKFASTS.length), 0));
+  STARTERS_LUNCH.push(...generateStarters(Math.max(0, 150 - STARTERS_LUNCH.length), 0));
+  STARTERS_DINNER.push(...generateStarters(Math.max(0, 150 - STARTERS_DINNER.length), 4));
+  DESSERTS_LUNCH.push(...generateDesserts(Math.max(0, 150 - DESSERTS_LUNCH.length), 0));
+  DESSERTS_DINNER.push(...generateDesserts(Math.max(0, 150 - DESSERTS_DINNER.length), 4));
 }catch(e){ console.error('Erreur génération de menus :', e); }
 
 function isMealAllowed(meal){
@@ -1658,10 +1673,28 @@ function renderRecipeBody(recipe){
     </div>`;
 }
 
+let favoriteMeals = new Set();
+
+function allMealsFlat(){
+  return [
+    ...poolFor('breakfast', 'main'),
+    ...poolFor('lunch', 'starter'), ...poolFor('lunch', 'main'), ...poolFor('lunch', 'dessert'),
+    ...poolFor('dinner', 'starter'), ...poolFor('dinner', 'main'), ...poolFor('dinner', 'dessert'),
+  ];
+}
+
+async function toggleFavorite(name){
+  if(favoriteMeals.has(name)) favoriteMeals.delete(name); else favoriteMeals.add(name);
+  await storeSet(pk('fodmap-favorite-meals'), JSON.stringify([...favoriteMeals]), true);
+  renderMenus();
+}
+
 const MEAL_SECTIONS = [
   {key:'breakfast', label:'🌅 Petit-déjeuner'},
   {key:'lunch', label:'🍽️ Déjeuner'},
   {key:'dinner', label:'🌙 Dîner'},
+  {key:'all', label:'🔎 Tous'},
+  {key:'favorites', label:'⭐ Favoris'},
 ];
 let activeMealSlot = 'breakfast';
 let activeCourse = 'main';
@@ -1669,9 +1702,11 @@ let activeCourse = 'main';
 function renderMealTabs(){
   const wrap = document.getElementById('mealTabs');
   wrap.innerHTML = MEAL_SECTIONS.map(sec=>{
-    const count = sec.key==='breakfast'
-      ? poolFor(sec.key, 'main').length
-      : COURSE_ORDER.reduce((sum,c)=> sum + poolFor(sec.key, c).length, 0);
+    let count;
+    if(sec.key === 'all') count = allMealsFlat().length;
+    else if(sec.key === 'favorites') count = allMealsFlat().filter(m=> favoriteMeals.has(m.name)).length;
+    else if(sec.key === 'breakfast') count = poolFor(sec.key, 'main').length;
+    else count = COURSE_ORDER.reduce((sum,c)=> sum + poolFor(sec.key, c).length, 0);
     return `<button class="meal-tab-btn ${activeMealSlot===sec.key?'active':''}" data-slot="${sec.key}">${sec.label} <span class="count">(${count})</span></button>`;
   }).join('');
   wrap.querySelectorAll('.meal-tab-btn').forEach(btn=>{
@@ -1684,7 +1719,7 @@ function renderMealTabs(){
 
 function renderCourseTabs(){
   const wrap = document.getElementById('courseTabs');
-  const show = activeMealSlot !== 'breakfast';
+  const show = activeMealSlot === 'lunch' || activeMealSlot === 'dinner';
   wrap.style.display = show ? 'flex' : 'none';
   if(!show) return;
   wrap.innerHTML = COURSE_ORDER.map(c=>{
@@ -1705,9 +1740,16 @@ function renderMenus(){
   const query = document.getElementById('menuSearch').value.trim().toLowerCase();
   const wrap = document.getElementById('menuList');
   const countEl = document.getElementById('menuCount');
-  const course = activeMealSlot === 'breakfast' ? 'main' : activeCourse;
 
-  let pool = poolFor(activeMealSlot, course);
+  let pool;
+  if(activeMealSlot === 'all'){
+    pool = allMealsFlat();
+  } else if(activeMealSlot === 'favorites'){
+    pool = allMealsFlat().filter(m=> favoriteMeals.has(m.name));
+  } else {
+    const course = activeMealSlot === 'breakfast' ? 'main' : activeCourse;
+    pool = poolFor(activeMealSlot, course);
+  }
   const totalEligible = pool.length;
   if(query){
     pool = pool.filter(m=> m.name.toLowerCase().includes(query) || m.foods.some(f=>f.toLowerCase().includes(query)));
@@ -1717,20 +1759,25 @@ function renderMenus(){
     ? `${pool.length} résultat${pool.length>1?'s':''} pour « ${query} » sur ${totalEligible} proposition${totalEligible>1?'s':''} au total`
     : `${totalEligible} proposition${totalEligible>1?'s':''}`;
 
+  const emptyMsg = activeMealSlot === 'favorites'
+    ? "<div class=\"empty-state\">Pas encore de favori — clique sur l'étoile ☆ d'un repas pour l'ajouter ici.</div>"
+    : "<div class=\"empty-state\">Trop d'aliments exclus pour proposer une idée ici — pense à en réintégrer certains dans le bandeau ci-dessus ou dans l'onglet « Non appréciés ».</div>";
+
   const cardsHtml = pool.length ? pool.map((meal, idx)=>`
       <div class="menu-card" data-slot="${activeMealSlot}" data-idx="${idx}">
         <div class="menu-card-head">
           <div class="menu-card-name">${meal.name}</div>
-          <div class="menu-card-toggle">Voir la recette ▾</div>
+          <div class="menu-card-actions">
+            <button class="fav-star ${favoriteMeals.has(meal.name)?'active':''}" data-name="${meal.name.replace(/"/g,'&quot;')}" title="Mettre en favori">${favoriteMeals.has(meal.name) ? '⭐' : '☆'}</button>
+            <div class="menu-card-toggle">Voir la recette ▾</div>
+          </div>
         </div>
         <div class="ing-row">
           ${meal.foods.map(f=>`<span class="ing-chip${dislikedFoods.has(normalizeFood(f))?' disliked':''}" data-food="${f}">${f}</span>`).join('')}
         </div>
         ${renderRecipeBody(meal.recipe)}
       </div>`).join('')
-    : (query
-        ? `<div class="empty-state">Aucun repas ne correspond à « ${query} » dans cette catégorie.</div>`
-        : "<div class=\"empty-state\">Trop d'aliments exclus pour proposer une idée ici — pense à en réintégrer certains dans le bandeau ci-dessus ou dans l'onglet « Non appréciés ».</div>");
+    : (query ? `<div class="empty-state">Aucun repas ne correspond à « ${query} » dans cette catégorie.</div>` : emptyMsg);
 
   wrap.innerHTML = `<div class="menu-section"><div class="menu-grid">${cardsHtml}</div></div>`;
 
@@ -1745,6 +1792,9 @@ function renderMenus(){
   });
   wrap.querySelectorAll('.ing-chip').forEach(chip=>{
     chip.addEventListener('click', (e)=>{ e.stopPropagation(); toggleDislike(chip.dataset.food); });
+  });
+  wrap.querySelectorAll('.fav-star').forEach(star=>{
+    star.addEventListener('click', (e)=>{ e.stopPropagation(); toggleFavorite(star.dataset.name); });
   });
 }
 document.getElementById('menuSearch').addEventListener('input', renderMenus);
