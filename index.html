@@ -732,16 +732,22 @@ function withTimeout(promise, ms){
   });
 }
 
-async function storeGet(key, shared){
-  if(fbReady){
-    try{
-      const snap = await withTimeout(fbDb.ref('fodmap/' + key).once('value'), 4000);
-      const v = snap.val();
-      if(v !== null && typeof v !== 'undefined') return v;
-    }catch(e){ /* pas de réseau, mauvaise région, ou trop lent : on retombe sur le local */ }
-  }
+// Vérifie si une valeur stockée (JSON) est "vide" (tableau vide, objet vide,
+// ou rien du tout) — sert à ne jamais laisser une copie vide écraser une
+// copie qui contient de vraies données, quelle que soit sa provenance.
+function isEmptyStoredValue(raw){
+  if(raw === null || typeof raw === 'undefined' || raw === '') return true;
+  try{
+    const parsed = JSON.parse(raw);
+    if(Array.isArray(parsed)) return parsed.length === 0;
+    if(parsed && typeof parsed === 'object') return Object.keys(parsed).length === 0;
+    return false;
+  }catch(e){ return false; }
+}
+
+async function readLocalOnly(key, shared){
   if(hasStorage){
-    try{ const r = await window.storage.get(key, !!shared); if(r) return r.value; }
+    try{ const r = await window.storage.get(key, !!shared); if(r && r.value !== null && typeof r.value !== 'undefined') return r.value; }
     catch(e){ /* on retombe sur localStorage / mémoire */ }
   }
   if(hasLocalStorage){
@@ -750,20 +756,42 @@ async function storeGet(key, shared){
   }
   return (typeof memoryStore[key] === 'undefined') ? null : memoryStore[key];
 }
-async function storeSet(key, value, shared){
+
+async function storeGet(key, shared){
+  const localVal = await readLocalOnly(key, shared);
+
   if(fbReady){
-    try{ await withTimeout(fbDb.ref('fodmap/' + key).set(value), 4000); }
-    catch(e){ /* pas de réseau ou trop lent : les copies locales prennent le relais */ }
+    try{
+      const snap = await withTimeout(fbDb.ref('fodmap/' + key).once('value'), 4000);
+      const fbVal = snap.val();
+      if(fbVal !== null && typeof fbVal !== 'undefined'){
+        // Si Firebase est vide mais qu'on a de vraies données en local,
+        // on garde le local et on "répare" Firebase avec — jamais l'inverse.
+        if(isEmptyStoredValue(fbVal) && !isEmptyStoredValue(localVal)){
+          try{ await withTimeout(fbDb.ref('fodmap/' + key).set(localVal), 4000); }catch(e){ /* tant pis, on garde le local quand même */ }
+          return localVal;
+        }
+        return fbVal;
+      }
+    }catch(e){ /* pas de réseau, mauvaise région, ou trop lent : on retombe sur le local */ }
   }
+  return localVal;
+}
+async function storeSet(key, value, shared){
   if(hasStorage){
     try{ await window.storage.set(key, value, !!shared); }
     catch(e){ /* on continue quand même vers localStorage ci-dessous */ }
   }
   if(hasLocalStorage){
-    try{ localStorage.setItem(key, value); return; }
-    catch(e){ /* stockage plein ou indisponible : on retombe sur la mémoire */ }
+    try{ localStorage.setItem(key, value); }
+    catch(e){ /* stockage plein ou indisponible */ }
+  } else {
+    memoryStore[key] = value;
   }
-  memoryStore[key] = value;
+  if(fbReady){
+    try{ await withTimeout(fbDb.ref('fodmap/' + key).set(value), 4000); }
+    catch(e){ /* pas de réseau ou trop lent : la copie locale reste la référence */ }
+  }
 }
 
 /* ============================================================
@@ -809,7 +837,7 @@ function attachRealtimeListeners(){
   if(!fbReady) return;
   const watched = [
     'fodmap-disliked-foods', 'fodmap-reintro-tests', 'fodmap-journal-entries',
-    'fodmap-product-scans', 'fodmap-favorite-meals',
+    'fodmap-product-scans', 'fodmap-favorite-meals', 'fodmap-custom-meal-additions',
   ];
   watched.forEach(base=>{
     const fullKey = pk(base);
@@ -817,10 +845,21 @@ function attachRealtimeListeners(){
     const cb = ref.on('value', (snap)=>{
       const v = snap.val();
       if(v === null || typeof v === 'undefined') return;
+      // Une mise à jour distante vide n'écrase jamais des données locales réelles.
+      if(isEmptyStoredValue(v) && !isEmptyStoredValue(currentLocalValue(base))) return;
       applyRemoteUpdate(base, v);
     });
     fbListeners.push({ ref, cb });
   });
+}
+function currentLocalValue(base){
+  if(base === 'fodmap-disliked-foods') return JSON.stringify([...dislikedFoods]);
+  if(base === 'fodmap-reintro-tests') return JSON.stringify(reintroTests);
+  if(base === 'fodmap-journal-entries') return JSON.stringify(journalEntries);
+  if(base === 'fodmap-product-scans') return JSON.stringify(productScans);
+  if(base === 'fodmap-favorite-meals') return JSON.stringify([...favoriteMeals]);
+  if(base === 'fodmap-custom-meal-additions') return JSON.stringify(customMealAdditions);
+  return null;
 }
 function applyRemoteUpdate(base, rawValue){
   if(base === 'fodmap-disliked-foods'){
@@ -837,6 +876,9 @@ function applyRemoteUpdate(base, rawValue){
     renderScanHistory();
   } else if(base === 'fodmap-favorite-meals'){
     try{ favoriteMeals = new Set(JSON.parse(rawValue)); }catch(e){ return; }
+    renderMenus();
+  } else if(base === 'fodmap-custom-meal-additions'){
+    try{ customMealAdditions = JSON.parse(rawValue); }catch(e){ return; }
     renderMenus();
   }
 }
@@ -2025,13 +2067,13 @@ function updatePainLive(){
 painRange.addEventListener('input', updatePainLive);
 updatePainLive();
 
-document.getElementById('entryDate').valueAsDate = today;
+document.getElementById('entryDate').value = isoDate(today);
 
 let editingEntryId = null;
 const entrySubmitBtn = document.querySelector('#entryForm button[type="submit"]');
 
 function resetEntryForm(){
-  document.getElementById('entryDate').valueAsDate = today;
+  document.getElementById('entryDate').value = isoDate(today);
   document.getElementById('entryFoods').value = '';
   document.getElementById('entryNotes').value = '';
   painRange.value = 0;
@@ -2397,7 +2439,7 @@ reintroFoodInput.addEventListener('focus', renderFoodPicker);
 reintroFoodInput.addEventListener('input', renderFoodPicker);
 reintroFoodInput.addEventListener('blur', ()=>{ setTimeout(()=> foodPickerResults.classList.remove('show'), 150); });
 
-document.getElementById('reintroStart').valueAsDate = today;
+document.getElementById('reintroStart').value = isoDate(today);
 
 document.getElementById('reintroForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
