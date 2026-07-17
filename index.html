@@ -308,6 +308,15 @@
   .recipe-body{ margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); font-size:0.86rem; }
   .recipe-body h5{ margin:0 0 6px; font-size:0.76rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); }
   .recipe-body ul, .recipe-body ol{ margin:0 0 12px; padding-left:18px; }
+  .custom-ing-list{ display:flex; flex-wrap:wrap; gap:6px; margin:-6px 0 12px; }
+  .custom-chip{
+    display:inline-flex; align-items:center; gap:6px; background:var(--accent); color:#fff;
+    border-radius:100px; padding:4px 6px 4px 12px; font-size:0.78rem;
+  }
+  .custom-chip button{ background:rgba(255,255,255,0.3); border:none; color:#fff; border-radius:50%; width:16px; height:16px; cursor:pointer; font-size:0.7rem; line-height:1; }
+  .add-ing-row{ display:flex; gap:8px; margin-top:8px; }
+  .add-ing-input{ flex:1; padding:8px 12px !important; font-size:0.85rem !important; }
+  .add-ing-btn{ flex:none; }
   .recipe-body li{ margin-bottom:4px; }
   .menu-hint{ font-size:0.82rem; color:var(--ink-soft); margin-bottom:16px; }
 
@@ -468,6 +477,10 @@
         <div class="item"><span class="face high sm"></span> Riche en FODMAP — à éviter</div>
       </div>
 
+      <div class="note-box" style="margin-top:0; margin-bottom:18px;">
+        ⚠️ Vert ne veut pas dire « illimité ». Chaque aliment est testé pour une portion précise : au-delà, même un aliment vert peut devenir riche en FODMAP. Quand une portion maximale est connue, elle est indiquée dans la note sous l'aliment.
+      </div>
+
       <div class="search-row">
         <input type="search" id="foodSearch" placeholder="Rechercher un aliment… (ex : ail, riz, pomme)">
       </div>
@@ -531,6 +544,7 @@
           </div>
           <div class="full">
             <button type="submit" class="primary">Ajouter au journal</button>
+            <button type="button" id="cancelEditEntry" class="secondary" style="display:none;">Annuler la modification</button>
           </div>
         </div>
       </form>
@@ -667,10 +681,10 @@
      ============================================================ -->
 <script>
 window.FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBEht2CBK9HJVihWhcJEM1p5bOrFN07gdA",
-  authDomain: "fodmap-7f042.firebaseapp.com",
-  databaseURL: "https://fodmap-7f042-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "fodmap-7f042",
+  apiKey: "COLLE_ICI_TA_CLE_API",
+  authDomain: "COLLE_ICI_TON_PROJET.firebaseapp.com",
+  databaseURL: "https://COLLE_ICI_TON_PROJET-default-rtdb.firebaseio.com",
+  projectId: "COLLE_ICI_TON_PROJET",
 };
 </script>
 
@@ -828,12 +842,13 @@ function applyRemoteUpdate(base, rawValue){
 }
 
 async function loadProfileData(){
-  const [dislikedRaw, testsRaw, entriesRaw, scansRaw, favRaw] = await Promise.all([
+  const [dislikedRaw, testsRaw, entriesRaw, scansRaw, favRaw, customRaw] = await Promise.all([
     storeGet(pk('fodmap-disliked-foods'), true),
     storeGet(pk('fodmap-reintro-tests'), true),
     storeGet(pk('fodmap-journal-entries'), true),
     storeGet(pk('fodmap-product-scans'), true),
     storeGet(pk('fodmap-favorite-meals'), true),
+    storeGet(pk('fodmap-custom-meal-additions'), true),
   ]);
 
   dislikedFoods = new Set();
@@ -851,6 +866,9 @@ async function loadProfileData(){
 
   favoriteMeals = new Set();
   if(favRaw){ try{ favoriteMeals = new Set(JSON.parse(favRaw)); }catch(e){ favoriteMeals = new Set(); } }
+
+  customMealAdditions = {};
+  if(customRaw){ try{ customMealAdditions = JSON.parse(customRaw); }catch(e){ customMealAdditions = {}; } }
 
   renderExcludedPanel();
   renderMenus();
@@ -893,18 +911,18 @@ const today = new Date(); today.setHours(0,0,0,0);
 const FOODS = [
   {n:"Banane pas mûre", c:"Fruits", l:"low"},
   {n:"Banane bien mûre", c:"Fruits", l:"moderate", x:"les FODMAP augmentent en mûrissant"},
-  {n:"Orange", c:"Fruits", l:"low"},
+  {n:"Orange", c:"Fruits", l:"low", x:"portion généreuse habituellement tolérée : environ 1 fruit moyen (130 g)"},
   {n:"Mandarine / Clémentine", c:"Fruits", l:"low"},
   {n:"Citron", c:"Fruits", l:"low"},
   {n:"Citron vert", c:"Fruits", l:"low"},
   {n:"Pamplemousse", c:"Fruits", l:"moderate"},
-  {n:"Fraise", c:"Fruits", l:"low"},
-  {n:"Framboise", c:"Fruits", l:"low"},
-  {n:"Myrtille", c:"Fruits", l:"low"},
+  {n:"Fraise", c:"Fruits", l:"low", x:"FODMAP quasi indétectables : se mange librement dans les quantités raisonnables d'un repas"},
+  {n:"Framboise", c:"Fruits", l:"low", x:"portion généreuse habituellement tolérée : environ 60 g (30 baies)"},
+  {n:"Myrtille", c:"Fruits", l:"low", x:"portion testée par Monash : environ 125 g (1 tasse) selon les données les plus récentes"},
   {n:"Cassis", c:"Fruits", l:"moderate"},
-  {n:"Raisin", c:"Fruits", l:"low"},
-  {n:"Kiwi", c:"Fruits", l:"low"},
-  {n:"Ananas", c:"Fruits", l:"low"},
+  {n:"Raisin", c:"Fruits", l:"low", x:"portion généreuse habituellement tolérée : environ 1 tasse (150 g)"},
+  {n:"Kiwi", c:"Fruits", l:"low", x:"portion testée : environ 2 fruits (150 g)"},
+  {n:"Ananas", c:"Fruits", l:"low", x:"portion testée : environ 140 g (3/4 de tasse)"},
   {n:"Papaye", c:"Fruits", l:"low"},
   {n:"Fruit de la passion", c:"Fruits", l:"low"},
   {n:"Melon cantaloup", c:"Fruits", l:"low"},
@@ -925,12 +943,12 @@ const FOODS = [
   {n:"Grenade", c:"Fruits", l:"moderate"},
   {n:"Avocat", c:"Fruits", l:"moderate", x:"faible jusqu'à 30 g (1/8) ; toléré par la plupart jusqu'à 60 g (1/4) ; devient riche autour de 80 g (1/2 avocat)"},
 
-  {n:"Carotte", c:"Légumes", l:"low"},
-  {n:"Concombre", c:"Légumes", l:"low"},
-  {n:"Courgette", c:"Légumes", l:"low"},
+  {n:"Carotte", c:"Légumes", l:"low", x:"pas de limite haute connue dans les portions habituelles d'un repas"},
+  {n:"Concombre", c:"Légumes", l:"low", x:"pas de limite haute connue dans les portions habituelles d'un repas"},
+  {n:"Courgette", c:"Légumes", l:"low", x:"portion testée généreuse : environ 65 g par portion habituelle"},
   {n:"Laitue", c:"Légumes", l:"low"},
   {n:"Roquette", c:"Légumes", l:"low"},
-  {n:"Épinard", c:"Légumes", l:"low"},
+  {n:"Épinard", c:"Légumes", l:"low", x:"portion testée : environ 75 g cru (1 tasse) ; en grande quantité cuite, la concentration en FODMAP augmente"},
   {n:"Poivron rouge", c:"Légumes", l:"low"},
   {n:"Poivron vert", c:"Légumes", l:"moderate"},
   {n:"Tomate", c:"Légumes", l:"low"},
@@ -963,8 +981,8 @@ const FOODS = [
   {n:"Petits pois", c:"Légumes", l:"high"},
   {n:"Pois mange-tout", c:"Légumes", l:"moderate"},
 
-  {n:"Riz blanc", c:"Féculents & céréales", l:"low"},
-  {n:"Riz complet", c:"Féculents & céréales", l:"low"},
+  {n:"Riz blanc", c:"Féculents & céréales", l:"low", x:"pas de limite haute connue dans les portions habituelles d'un repas"},
+  {n:"Riz complet", c:"Féculents & céréales", l:"low", x:"pas de limite haute connue dans les portions habituelles d'un repas"},
   {n:"Quinoa", c:"Féculents & céréales", l:"low"},
   {n:"Avoine (petite portion)", c:"Féculents & céréales", l:"low"},
   {n:"Sarrasin", c:"Féculents & céréales", l:"low"},
@@ -1024,11 +1042,11 @@ const FOODS = [
   {n:"Mascarpone", c:"Produits laitiers", l:"high"},
   {n:"Glace (lait de vache)", c:"Produits laitiers", l:"high"},
 
-  {n:"Noix", c:"Noix & graines", l:"low"},
+  {n:"Noix", c:"Noix & graines", l:"low", x:"portion testée : environ 30 g (15 cerneaux)"},
   {n:"Noix de macadamia", c:"Noix & graines", l:"low"},
   {n:"Cacahuètes", c:"Noix & graines", l:"low"},
-  {n:"Graines de courge", c:"Noix & graines", l:"low"},
-  {n:"Graines de tournesol", c:"Noix & graines", l:"low"},
+  {n:"Graines de courge", c:"Noix & graines", l:"low", x:"portion testée : environ 20 g (2 c. à s.)"},
+  {n:"Graines de tournesol", c:"Noix & graines", l:"low", x:"portion testée : environ 20 g (2 c. à s.)"},
   {n:"Graines de chia (petite quantité)", c:"Noix & graines", l:"low"},
   {n:"Graines de lin (petite quantité)", c:"Noix & graines", l:"low"},
   {n:"Amandes (10, soit 12 g)", c:"Noix & graines", l:"low", x:"faible jusqu'à 12 g (10 amandes) ; devient riche dès 20 amandes (24 g)"},
@@ -1788,13 +1806,52 @@ async function toggleDislike(food){
   renderMenus();
 }
 
-function renderRecipeBody(recipe){
+let customMealAdditions = {}; // { "nom du repas": ["aliment ajouté", ...] }
+
+function getMealWithCustom(meal){
+  const extra = customMealAdditions[meal.name];
+  if(!extra || extra.length === 0) return meal;
+  return {
+    ...meal,
+    foods: [...meal.foods, ...extra],
+    recipe: {
+      ingredients: [...meal.recipe.ingredients, ...extra.map(f=>`${capFirst(f)} (ajouté par toi)`)],
+      steps: meal.recipe.steps,
+    },
+  };
+}
+
+async function addCustomIngredient(mealName, food){
+  const clean = food.trim();
+  if(!clean) return;
+  if(!customMealAdditions[mealName]) customMealAdditions[mealName] = [];
+  if(customMealAdditions[mealName].some(f=> normalizeFood(f) === normalizeFood(clean))) return;
+  customMealAdditions[mealName].push(clean);
+  await storeSet(pk('fodmap-custom-meal-additions'), JSON.stringify(customMealAdditions), true);
+  renderMenus();
+}
+async function removeCustomIngredient(mealName, food){
+  if(!customMealAdditions[mealName]) return;
+  customMealAdditions[mealName] = customMealAdditions[mealName].filter(f=> normalizeFood(f) !== normalizeFood(food));
+  if(customMealAdditions[mealName].length === 0) delete customMealAdditions[mealName];
+  await storeSet(pk('fodmap-custom-meal-additions'), JSON.stringify(customMealAdditions), true);
+  renderMenus();
+}
+
+function renderRecipeBody(meal){
+  const recipe = meal.recipe;
+  const custom = customMealAdditions[meal.name] || [];
   return `
     <div class="recipe-body" style="display:none;">
       <h5>Ingrédients</h5>
       <ul>${recipe.ingredients.map(i=>`<li>${i}</li>`).join('')}</ul>
+      ${custom.length ? `<div class="custom-ing-list">${custom.map(f=>`<span class="custom-chip">${f}<button class="custom-remove" data-meal="${meal.name.replace(/"/g,'&quot;')}" data-food="${f.replace(/"/g,'&quot;')}">×</button></span>`).join('')}</div>` : ''}
       <h5>Préparation</h5>
       <ol>${recipe.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+      <div class="add-ing-row">
+        <input type="text" class="add-ing-input" placeholder="Ajouter un aliment à cette recette…">
+        <button class="secondary add-ing-btn">Ajouter</button>
+      </div>
     </div>`;
 }
 
@@ -1888,7 +1945,9 @@ function renderMenus(){
     ? "<div class=\"empty-state\">Pas encore de favori — clique sur l'étoile ☆ d'un repas pour l'ajouter ici.</div>"
     : "<div class=\"empty-state\">Trop d'aliments exclus pour proposer une idée ici — pense à en réintégrer certains dans le bandeau ci-dessus ou dans l'onglet « Non appréciés ».</div>";
 
-  const cardsHtml = pool.length ? pool.map((meal, idx)=>`
+  const cardsHtml = pool.length ? pool.map((rawMeal, idx)=>{
+      const meal = getMealWithCustom(rawMeal);
+      return `
       <div class="menu-card" data-slot="${activeMealSlot}" data-idx="${idx}">
         <div class="menu-card-head">
           <div class="menu-card-name">${meal.name}</div>
@@ -1900,8 +1959,9 @@ function renderMenus(){
         <div class="ing-row">
           ${meal.foods.map(f=>`<span class="ing-chip${dislikedFoods.has(normalizeFood(f))?' disliked':''}" data-food="${f}">${f}</span>`).join('')}
         </div>
-        ${renderRecipeBody(meal.recipe)}
-      </div>`).join('')
+        ${renderRecipeBody(rawMeal)}
+      </div>`;
+    }).join('')
     : (query ? `<div class="empty-state">Aucun repas ne correspond à « ${query} » dans cette catégorie.</div>` : emptyMsg);
 
   wrap.innerHTML = `<div class="menu-section"><div class="menu-grid">${cardsHtml}</div></div>`;
@@ -1920,6 +1980,22 @@ function renderMenus(){
   });
   wrap.querySelectorAll('.fav-star').forEach(star=>{
     star.addEventListener('click', (e)=>{ e.stopPropagation(); toggleFavorite(star.dataset.name); });
+  });
+  wrap.querySelectorAll('.custom-remove').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{ e.stopPropagation(); removeCustomIngredient(btn.dataset.meal, btn.dataset.food); });
+  });
+  wrap.querySelectorAll('.menu-card').forEach(card=>{
+    const nameEl = card.querySelector('.menu-card-name');
+    const mealName = nameEl.textContent;
+    const input = card.querySelector('.add-ing-input');
+    const addBtn = card.querySelector('.add-ing-btn');
+    if(!input || !addBtn) return;
+    const doAdd = (e)=>{ e.stopPropagation(); addCustomIngredient(mealName, input.value); input.value=''; };
+    addBtn.addEventListener('click', doAdd);
+    input.addEventListener('click', (e)=> e.stopPropagation());
+    input.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){ e.preventDefault(); doAdd(e); }
+    });
   });
 }
 document.getElementById('menuSearch').addEventListener('input', renderMenus);
@@ -1951,6 +2027,22 @@ updatePainLive();
 
 document.getElementById('entryDate').valueAsDate = today;
 
+let editingEntryId = null;
+const entrySubmitBtn = document.querySelector('#entryForm button[type="submit"]');
+
+function resetEntryForm(){
+  document.getElementById('entryDate').valueAsDate = today;
+  document.getElementById('entryFoods').value = '';
+  document.getElementById('entryNotes').value = '';
+  painRange.value = 0;
+  updatePainLive();
+  editingEntryId = null;
+  if(entrySubmitBtn) entrySubmitBtn.textContent = 'Ajouter au journal';
+  const cancelBtn = document.getElementById('cancelEditEntry');
+  if(cancelBtn) cancelBtn.style.display = 'none';
+}
+document.getElementById('cancelEditEntry').addEventListener('click', resetEntryForm);
+
 document.getElementById('entryForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const date = document.getElementById('entryDate').value;
@@ -1959,16 +2051,34 @@ document.getElementById('entryForm').addEventListener('submit', async (e)=>{
   const pain = parseInt(painRange.value, 10);
   const notes = document.getElementById('entryNotes').value.trim();
 
-  journalEntries.push({ id: Date.now(), date, foods, pain, notes });
+  if(editingEntryId !== null){
+    const idx = journalEntries.findIndex(e2=> e2.id === editingEntryId);
+    if(idx !== -1){
+      journalEntries[idx] = { ...journalEntries[idx], date, foods, pain, notes };
+    }
+  } else {
+    journalEntries.push({ id: Date.now(), date, foods, pain, notes });
+  }
   await storeSet(pk('fodmap-journal-entries'), JSON.stringify(journalEntries), true);
 
-  document.getElementById('entryFoods').value = '';
-  document.getElementById('entryNotes').value = '';
-  painRange.value = 0;
-  updatePainLive();
-
+  resetEntryForm();
   renderJournal();
 });
+
+function startEditEntry(id){
+  const entry = journalEntries.find(e=> e.id === id);
+  if(!entry) return;
+  editingEntryId = id;
+  document.getElementById('entryDate').value = entry.date;
+  document.getElementById('entryFoods').value = entry.foods.join(', ');
+  painRange.value = entry.pain;
+  updatePainLive();
+  document.getElementById('entryNotes').value = entry.notes || '';
+  if(entrySubmitBtn) entrySubmitBtn.textContent = 'Mettre à jour cette entrée';
+  const cancelBtn = document.getElementById('cancelEditEntry');
+  if(cancelBtn) cancelBtn.style.display = 'inline-block';
+  try{ document.getElementById('entryForm').scrollIntoView({ behavior:'smooth', block:'start' }); }catch(e){ /* pas grave */ }
+}
 
 function renderJournal(){
   const list = document.getElementById('entriesList');
@@ -1989,16 +2099,26 @@ function renderJournal(){
           </div>
           ${en.notes ? `<div class="notes">${en.notes}</div>` : ''}
         </div>
-        <button class="del" data-id="${en.id}" title="Supprimer">×</button>
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <button class="edit-entry" data-id="${en.id}" title="Modifier">✏️</button>
+          <button class="del" data-id="${en.id}" title="Supprimer">×</button>
+        </div>
       </div>`;
     }).join('');
   }
+
+  list.querySelectorAll('.edit-entry').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      startEditEntry(parseInt(btn.dataset.id, 10));
+    });
+  });
 
   list.querySelectorAll('.del').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const id = parseInt(btn.dataset.id, 10);
       journalEntries = journalEntries.filter(e=>e.id !== id);
       await storeSet(pk('fodmap-journal-entries'), JSON.stringify(journalEntries), true);
+      if(editingEntryId === id) resetEntryForm();
       renderJournal();
     });
   });
