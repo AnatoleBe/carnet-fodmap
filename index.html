@@ -86,6 +86,18 @@
     border-radius:100px; padding:9px 20px; cursor:pointer; transition: all .15s ease;
   }
   .profile-choice.active{ background:var(--forest); color:#fff; border-color:var(--forest); }
+  .admin-row{ margin-top:10px; }
+  .profile-choice.admin-choice{ background:var(--surface-alt); color:var(--ink-soft); border-style:dashed; }
+  .profile-choice.admin-choice.active{ background:var(--danger); color:#fff; border-color:var(--danger); border-style:solid; }
+  .admin-login-form{ display:flex; gap:8px; align-items:center; }
+  .admin-panel{
+    margin-top:12px; padding-top:12px; border-top:1px dashed var(--line);
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .admin-panel-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .admin-panel-row label{ margin:0; white-space:nowrap; font-size:0.85rem; }
+  .admin-panel-row select, .admin-panel-row input{ width:auto; flex:1; min-width:140px; }
+  .admin-msg{ font-size:0.82rem; color:var(--success-ink); }
   .profile-meta{ margin-top:8px; display:flex; flex-direction:column; gap:2px; }
   .profile-meta #profileCurrent{ font-weight:700; font-size:0.85rem; color:var(--forest); }
   .sync-status{ font-size:0.76rem; font-weight:600; }
@@ -445,10 +457,27 @@
   </header>
 
   <div class="profile-bar">
-    <div class="profile-row">
+    <div class="profile-row" id="profileButtonsRow">
       <span class="profile-label">👤 Qui utilise le carnet ?</span>
-      <button type="button" class="profile-choice" data-profile="patrick">Patrick</button>
-      <button type="button" class="profile-choice" data-profile="agathe">Agathe</button>
+    </div>
+    <div class="profile-row admin-row">
+      <button type="button" class="profile-choice admin-choice" id="adminBtn">🔐 Anatole (admin)</button>
+      <div class="admin-login-form" id="adminLoginForm" style="display:none;">
+        <input type="password" id="adminPasswordInput" placeholder="Mot de passe">
+        <button type="button" class="secondary" id="adminPasswordSubmit">Valider</button>
+      </div>
+    </div>
+    <div class="admin-panel" id="adminPanel" style="display:none;">
+      <div class="admin-panel-row">
+        <label for="adminViewSelect">👁️ Voir les données de :</label>
+        <select id="adminViewSelect"></select>
+        <button type="button" class="secondary" id="adminViewBtn">Voir</button>
+      </div>
+      <div class="admin-panel-row">
+        <input type="text" id="newProfileName" placeholder="Prénom du nouveau profil">
+        <button type="button" class="secondary" id="createProfileBtn">Créer ce profil</button>
+      </div>
+      <div id="adminCreateMsg" class="admin-msg"></div>
     </div>
     <div class="profile-meta">
       <span id="profileCurrent">Choisis ton prénom pour charger tes propres données</span>
@@ -585,7 +614,7 @@
           </div>
           <div class="full">
             <label for="scanIngredients">Liste des ingrédients (recopiée de l'emballage)</label>
-            <textarea id="scanIngredients" rows="3" placeholder="ex : tomates, huile d'olive, ail, oignon, sel, sucre…" required></textarea>
+            <textarea id="scanIngredients" rows="3" placeholder="ex : tomates, huile d'olive, ail, oignon, sel, sucre…"></textarea>
           </div>
           <div class="full">
             <button type="submit" class="primary">Vérifier ce produit</button>
@@ -603,7 +632,20 @@
   <section class="panel" id="panel-reintro">
     <div class="card">
       <h2 class="panel-title">Réintroduire, un aliment à la fois</h2>
-      <p class="panel-sub">La phase de réintroduction se fait normalement <strong>un aliment (ou une famille de FODMAP) à la fois</strong>, testé sur environ <strong>3 jours</strong>, suivi de <strong>2 à 3 jours de pause</strong> avant le test suivant — soit un rythme d'à peu près un test par semaine. La phase complète prend en général 6 à 8 semaines.</p>
+      <p class="panel-sub">La phase de réintroduction se fait normalement <strong>un aliment (ou une famille de FODMAP) à la fois</strong>, testé sur environ <strong>3 jours</strong>, suivi de <strong>2 à 3 jours de pause</strong> avant le test suivant — soit un rythme d'à peu près un test par semaine. La phase complète prend en général <strong>6 à 8 semaines</strong> (parfois jusqu'à 12).</p>
+
+      <div class="note-box" style="margin-top:0; margin-bottom:18px;">
+        <strong>Les règles à suivre, d'après les protocoles de diététiciens spécialisés :</strong>
+        <ul style="margin:8px 0 0; padding-left:20px;">
+          <li><strong>Un seul aliment testé à la fois</strong>, sur un fond alimentaire qui reste strictement pauvre en FODMAP le reste du temps — sinon impossible de savoir quel aliment est responsable d'une gêne.</li>
+          <li><strong>Dose progressive sur 3 jours</strong> : petite quantité le jour 1, quantité moyenne le jour 2, quantité plus généreuse le jour 3 (c'est cette montée en dose qui permet de repérer le seuil de tolérance, pas juste "ça passe ou ça casse").</li>
+          <li><strong>Pas d'ordre imposé</strong> : Monash confirme qu'il n'y a pas de famille de FODMAP à tester en premier — autant commencer par ce qui semble le plus facile ou le plus utile au quotidien.</li>
+          <li><strong>Pause de 2 à 3 jours minimum</strong> après chaque test, et plus longtemps si des symptômes persistent — ne jamais enchaîner un nouveau test tant que le ventre n'est pas revenu à la normale.</li>
+          <li><strong>Noter systématiquement</strong> les symptômes (pas seulement "douleur ou pas") : ballonnements, gaz, transit, fatigue... le journal de l'onglet 03 sert à ça.</li>
+          <li><strong>La tolérance peut évoluer</strong> : un aliment mal toléré aujourd'hui peut être retesté 6 à 12 mois plus tard.</li>
+          <li>Idéalement, cette phase se fait <strong>avec l'accompagnement d'un médecin ou d'un(e) diététicien(ne)</strong> spécialisé(e), surtout en cas de doute ou de symptômes marqués.</li>
+        </ul>
+      </div>
 
       <form id="reintroForm">
         <div class="reintro-form">
@@ -681,11 +723,25 @@
      ============================================================ -->
 <script>
 window.FIREBASE_CONFIG = {
-  apiKey: "COLLE_ICI_TA_CLE_API",
-  authDomain: "COLLE_ICI_TON_PROJET.firebaseapp.com",
-  databaseURL: "https://COLLE_ICI_TON_PROJET-default-rtdb.firebaseio.com",
-  projectId: "COLLE_ICI_TON_PROJET",
+  apiKey: "AIzaSyBEht2CBK9HJVihWhcJEM1p5bOrFN07gdA",
+  authDomain: "fodmap-7f042.firebaseapp.com",
+  databaseURL: "https://fodmap-7f042-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "fodmap-7f042",
+  storageBucket: "fodmap-7f042.firebasestorage.app",
+  messagingSenderId: "154634659587",
+  appId: "1:154634659587:web:30e8e9645cba6312a6eb36",
+  measurementId: "G-FP6Y4L0HT6",
 };
+</script>
+
+<!-- ============================================================
+     MOT DE PASSE ADMIN — bloc isolé lui aussi, pour la même raison.
+     Remplace "change-moi" par le mot de passe de ton choix pour le
+     profil admin (Anatole), qui permet de créer des profils et de
+     consulter les données de n'importe qui.
+     ============================================================ -->
+<script>
+window.ADMIN_PASSWORD = "1234";
 </script>
 
 <!-- Firebase (synchronisation entre appareils) -->
@@ -801,18 +857,72 @@ async function storeSet(key, value, shared){
    dans un espace partagé, mais séparés par le prénom choisi.
    ============================================================ */
 let profile = 'default';
-const PROFILES = ['patrick', 'agathe'];
+const BASE_PROFILES = ['patrick', 'agathe', 'mathilde'];
+const ADMIN_PROFILE = 'anatole';
+let PROFILES = [...BASE_PROFILES]; // complété au démarrage avec les profils créés par l'admin
+let isAdmin = false;
+let adminViewingProfile = null; // si l'admin consulte un profil qui n'est pas le sien
+
+const ADMIN_PASSWORD = (typeof window.ADMIN_PASSWORD === 'string' && window.ADMIN_PASSWORD) ? window.ADMIN_PASSWORD : 'change-moi';
+
 function pk(base){ return `${base}::${profile}`; }
+function capFirstProfile(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function renderProfileButtons(){
+  const wrap = document.getElementById('profileButtonsRow');
+  const label = wrap.querySelector('.profile-label');
+  wrap.innerHTML = '';
+  if(label) wrap.appendChild(label);
+  else {
+    const l = document.createElement('span');
+    l.className = 'profile-label';
+    l.textContent = '👤 Qui utilise le carnet ?';
+    wrap.appendChild(l);
+  }
+  PROFILES.forEach(p=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'profile-choice';
+    btn.dataset.profile = p;
+    btn.textContent = capFirstProfile(p);
+    btn.addEventListener('click', ()=>{ adminViewingProfile = null; applyProfile(p); });
+    wrap.appendChild(btn);
+  });
+  updateProfileLabel();
+}
+
+async function loadProfileList(){
+  let extra = [];
+  try{
+    const raw = await storeGet('fodmap-profile-list', true);
+    if(raw){ extra = JSON.parse(raw); }
+  }catch(e){ extra = []; }
+  const merged = new Set([...BASE_PROFILES, ...(Array.isArray(extra) ? extra : [])]);
+  PROFILES = [...merged];
+}
+async function saveProfileList(){
+  const extra = PROFILES.filter(p=> !BASE_PROFILES.includes(p));
+  await storeSet('fodmap-profile-list', JSON.stringify(extra), true);
+}
+
 function updateProfileLabel(){
   const el = document.getElementById('profileCurrent');
   if(el){
-    el.textContent = PROFILES.includes(profile)
-      ? `Profil actif : ${profile.charAt(0).toUpperCase()}${profile.slice(1)}`
-      : 'Choisis ton prénom pour charger tes propres données';
+    if(adminViewingProfile){
+      el.textContent = `Vue admin (Anatole) : données de ${capFirstProfile(adminViewingProfile)}`;
+    } else if(profile === ADMIN_PROFILE){
+      el.textContent = 'Profil actif : Anatole (admin)';
+    } else if(PROFILES.includes(profile)){
+      el.textContent = `Profil actif : ${capFirstProfile(profile)}`;
+    } else {
+      el.textContent = 'Choisis ton prénom pour charger tes propres données';
+    }
   }
   document.querySelectorAll('.profile-choice').forEach(btn=>{
-    btn.classList.toggle('active', btn.dataset.profile === profile);
+    btn.classList.toggle('active', btn.dataset.profile === profile && !adminViewingProfile);
   });
+  const adminBtn = document.getElementById('adminBtn');
+  if(adminBtn) adminBtn.classList.toggle('active', isAdmin);
   const syncEl = document.getElementById('syncStatus');
   if(syncEl){
     syncEl.textContent = fbReady
@@ -822,11 +932,63 @@ function updateProfileLabel(){
   }
 }
 async function applyProfile(name){
-  profile = PROFILES.includes(name) ? name : 'default';
+  profile = (PROFILES.includes(name) || name === ADMIN_PROFILE) ? name : 'default';
   await storeSet('fodmap-remembered-profile-name', profile, false);
   updateProfileLabel();
   await loadProfileData();
 }
+
+function renderAdminPanel(){
+  const panel = document.getElementById('adminPanel');
+  panel.style.display = isAdmin ? 'flex' : 'none';
+  if(!isAdmin) return;
+  const select = document.getElementById('adminViewSelect');
+  select.innerHTML = [...PROFILES, ADMIN_PROFILE].map(p=>
+    `<option value="${p}">${capFirstProfile(p)}</option>`
+  ).join('');
+}
+
+document.getElementById('adminBtn').addEventListener('click', ()=>{
+  if(isAdmin) return; // déjà connecté, rien à faire
+  const form = document.getElementById('adminLoginForm');
+  form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+});
+document.getElementById('adminPasswordSubmit').addEventListener('click', async ()=>{
+  const input = document.getElementById('adminPasswordInput');
+  if(input.value === ADMIN_PASSWORD){
+    isAdmin = true;
+    input.value = '';
+    document.getElementById('adminLoginForm').style.display = 'none';
+    renderAdminPanel();
+    await applyProfile(ADMIN_PROFILE);
+  } else {
+    alert('Mot de passe incorrect.');
+  }
+});
+document.getElementById('adminPasswordInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('adminPasswordSubmit').click(); }
+});
+document.getElementById('adminViewBtn').addEventListener('click', async ()=>{
+  const chosen = document.getElementById('adminViewSelect').value;
+  adminViewingProfile = (chosen === ADMIN_PROFILE) ? null : chosen;
+  await applyProfile(chosen);
+});
+document.getElementById('createProfileBtn').addEventListener('click', async ()=>{
+  const nameInput = document.getElementById('newProfileName');
+  const clean = nameInput.value.trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9 _-]/g, '').trim();
+  const msg = document.getElementById('adminCreateMsg');
+  if(!clean){ msg.textContent = 'Tape un prénom valide.'; return; }
+  if(PROFILES.includes(clean) || clean === ADMIN_PROFILE){ msg.textContent = 'Ce profil existe déjà.'; return; }
+  PROFILES.push(clean);
+  await saveProfileList();
+  renderProfileButtons();
+  renderAdminPanel();
+  nameInput.value = '';
+  msg.textContent = `Profil « ${capFirstProfile(clean)} » créé !`;
+});
+
 let fbListeners = [];
 function detachRealtimeListeners(){
   fbListeners.forEach(({ref, cb})=>{ try{ ref.off('value', cb); }catch(e){} });
@@ -1192,6 +1354,97 @@ const FOODS = [
   {n:"Chips nature (pomme de terre)", c:"Sucreries & snacks", l:"low"},
   {n:"Biscuits secs au blé", c:"Sucreries & snacks", l:"high"},
   {n:"Barres de céréales industrielles", c:"Sucreries & snacks", l:"high", x:"souvent blé, miel ou sirop de glucose-fructose : vérifier l'étiquette"},
+
+  {n:"Saucisson sec nature", c:"Viandes, poissons & œufs", l:"high", x:"souvent à base d'ail ; version 100% pur porc sans ail parfois plus faible en petite quantité (30 g)"},
+  {n:"Pâté de campagne", c:"Viandes, poissons & œufs", l:"high", x:"contient presque toujours de l'ail et de l'oignon"},
+  {n:"Rillettes", c:"Viandes, poissons & œufs", l:"low", x:"vérifier l'absence d'ail/oignon ajoutés ; faible jusqu'à 50 g"},
+  {n:"Jambon cru (type Serrano/Parme)", c:"Viandes, poissons & œufs", l:"low", x:"faible jusqu'à environ 50 g ; vérifier les additifs sur l'étiquette"},
+  {n:"Mortadelle", c:"Viandes, poissons & œufs", l:"high", x:"souvent pistaches et additifs à base d'ail"},
+  {n:"Merguez", c:"Viandes, poissons & œufs", l:"high", x:"épicée à l'ail et souvent à l'oignon"},
+  {n:"Andouille / andouillette", c:"Viandes, poissons & œufs", l:"high", x:"préparation traditionnelle avec oignon"},
+  {n:"Boudin noir", c:"Viandes, poissons & œufs", l:"moderate", x:"vérifier la présence d'oignon dans la recette ; nature, faible en petite quantité"},
+  {n:"Saucisse de Toulouse nature", c:"Viandes, poissons & œufs", l:"low", x:"faible si sans ail/oignon ajoutés — vérifier l'étiquette"},
+  {n:"Bresaola", c:"Viandes, poissons & œufs", l:"low", x:"faible jusqu'à environ 50 g"},
+  {n:"Foie gras", c:"Viandes, poissons & œufs", l:"low", x:"faible en petite quantité (30 g) ; vérifier l'absence d'oignon dans la recette"},
+  {n:"Terrine de campagne", c:"Viandes, poissons & œufs", l:"high", x:"contient presque toujours ail et oignon"},
+  {n:"Dinde (blanc, nature)", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Agneau (nature)", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Lapin (nature)", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Canard (nature)", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Cabillaud / poisson blanc", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Truite", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Sardine (nature ou à l'huile)", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Maquereau", c:"Viandes, poissons & œufs", l:"low"},
+  {n:"Surimi", c:"Viandes, poissons & œufs", l:"moderate", x:"souvent à base d'amidon de blé et d'additifs ; vérifier l'étiquette"},
+  {n:"Tarama", c:"Viandes, poissons & œufs", l:"moderate", x:"souvent à base de lait/crème et de mie de pain : vérifier l'étiquette"},
+
+  {n:"Comté / Beaufort / Gruyère", c:"Produits laitiers", l:"low", x:"fromages très affinés, quasiment sans lactose"},
+  {n:"Camembert / Brie", c:"Produits laitiers", l:"low", x:"faible jusqu'à environ 40 g par portion habituelle"},
+  {n:"Roquefort / bleu", c:"Produits laitiers", l:"low", x:"faible jusqu'à environ 30 g"},
+  {n:"Mozzarella", c:"Produits laitiers", l:"low", x:"faible jusqu'à environ 100 g (un peu de lactose résiduel selon la marque)"},
+  {n:"Burrata", c:"Produits laitiers", l:"moderate", x:"plus riche en lactose que la mozzarella classique ; limiter la portion (~50 g)"},
+  {n:"Beurre demi-sel", c:"Produits laitiers", l:"low"},
+  {n:"Ghee (beurre clarifié)", c:"Produits laitiers", l:"low", x:"quasiment sans lactose, le petit-lait étant retiré"},
+  {n:"Fromage de brebis affiné", c:"Produits laitiers", l:"low"},
+  {n:"Fromage de chèvre affiné (bûche sèche)", c:"Produits laitiers", l:"low", x:"contrairement au chèvre frais, la version bien affinée est faible en lactose"},
+
+  {n:"Aubergine grillée", c:"Légumes", l:"low"},
+  {n:"Poivron jaune", c:"Légumes", l:"low"},
+  {n:"Poireau (blanc + vert mélangés)", c:"Légumes", l:"moderate", x:"dépend de la proportion de partie blanche ; préférer le vert seul si possible"},
+  {n:"Endive", c:"Légumes", l:"low", x:"faible jusqu'à environ 75 g (attention, l'amertume peut irriter certains ventres sensibles indépendamment du FODMAP)"},
+  {n:"Petit pois frais (mangetout entiers)", c:"Légumes", l:"moderate", x:"faible jusqu'à environ 10 gousses ; au-delà devient riche"},
+  {n:"Courge spaghetti", c:"Légumes", l:"low", x:"faible jusqu'à environ 100 g"},
+  {n:"Potiron / citrouille", c:"Légumes", l:"low", x:"faible jusqu'à environ 100 g (1/2 tasse)"},
+  {n:"Betterave crue", c:"Légumes", l:"high"},
+  {n:"Champignons de Paris en conserve, égouttés", c:"Légumes", l:"moderate", x:"la mise en conserve réduit un peu la teneur en mannitol ; rester prudent sur la quantité"},
+  {n:"Choucroute nature (chou fermenté)", c:"Légumes", l:"moderate", x:"la fermentation peut augmenter certains FODMAP ; tester une petite quantité d'abord"},
+
+  {n:"Pêche plate", c:"Fruits", l:"high"},
+  {n:"Abricot sec", c:"Fruits", l:"high", x:"les fruits secs concentrent fortement le fructose"},
+  {n:"Pruneau", c:"Fruits", l:"high"},
+  {n:"Clémentine (plusieurs)", c:"Fruits", l:"low", x:"faible jusqu'à environ 2 fruits (150 g)"},
+  {n:"Melon galia", c:"Fruits", l:"moderate", x:"proche du cantaloup, à tester en petite quantité (100 g)"},
+  {n:"Rhubarbe", c:"Fruits", l:"low", x:"faible jusqu'à environ 145 g (attention, souvent cuisinée avec beaucoup de sucre)"},
+  {n:"Mûre", c:"Fruits", l:"high"},
+  {n:"Cassis (fruit)", c:"Fruits", l:"moderate", x:"faible en petite quantité (~30 g), devient riche au-delà"},
+  {n:"Litchi en conserve", c:"Fruits", l:"high"},
+
+  {n:"Pain de mie industriel (blé)", c:"Féculents & céréales", l:"high"},
+  {n:"Biscottes (blé)", c:"Féculents & céréales", l:"high"},
+  {n:"Pâtes de blé sans gluten (maïs/riz)", c:"Féculents & céréales", l:"low"},
+  {n:"Semoule de maïs (polenta)", c:"Féculents & céréales", l:"low"},
+  {n:"Farine de riz", c:"Féculents & céréales", l:"low"},
+  {n:"Farine de sarrasin", c:"Féculents & céréales", l:"low"},
+  {n:"Farine de blé classique", c:"Féculents & céréales", l:"high"},
+  {n:"Biscuits apéritifs au blé", c:"Sucreries & snacks", l:"high"},
+  {n:"Crackers de riz nature", c:"Sucreries & snacks", l:"low"},
+
+  {n:"Houmous sans ail (maison)", c:"Légumineuses & protéines", l:"moderate", x:"reste riche en pois chiches : limiter la portion à ~2 c. à s."},
+  {n:"Lait de soja (protéines isolées, sans fève entière)", c:"Produits laitiers", l:"low"},
+  {n:"Falafels (à l'ail/oignon)", c:"Légumineuses & protéines", l:"high"},
+
+  {n:"Moutarde à l'ancienne", c:"Condiments & sauces", l:"low"},
+  {n:"Mayonnaise à l'ail (aïoli)", c:"Condiments & sauces", l:"high"},
+  {n:"Sauce barbecue industrielle", c:"Condiments & sauces", l:"high", x:"souvent riche en oignon et sirop de glucose-fructose"},
+  {n:"Sauce soja sucrée (type teriyaki)", c:"Condiments & sauces", l:"moderate", x:"vérifier la teneur en miel/sirop selon la marque"},
+  {n:"Harissa", c:"Condiments & sauces", l:"high", x:"contient très souvent de l'ail"},
+  {n:"Sauce curry industrielle", c:"Condiments & sauces", l:"high", x:"base ail/oignon quasi systématique"},
+  {n:"Bouillon cube sans ail/oignon (spécial IBS)", c:"Condiments & sauces", l:"low"},
+  {n:"Vinaigre de cidre", c:"Condiments & sauces", l:"low"},
+  {n:"Sauce nuoc-mâm", c:"Condiments & sauces", l:"low", x:"faible en petite quantité (1 c. à s.)"},
+
+  {n:"Pizza margherita industrielle (pâte au blé)", c:"Sucreries & snacks", l:"high", x:"pâte au blé + souvent ail/oignon en base de sauce"},
+  {n:"Quiche lorraine industrielle", c:"Sucreries & snacks", l:"high", x:"pâte au blé + souvent oignon dans la garniture"},
+  {n:"Nems (pâte de blé)", c:"Sucreries & snacks", l:"high"},
+  {n:"Sushi maki (riz, poisson, algue)", c:"Viandes, poissons & œufs", l:"low", x:"vérifier la sauce d'accompagnement (soja plutôt que sauce sucrée)"},
+  {n:"Houmous du commerce (à l'ail)", c:"Légumineuses & protéines", l:"high"},
+
+  {n:"Café au lait (lait de vache)", c:"Boissons", l:"high", x:"remplacer par du lait sans lactose pour rester faible"},
+  {n:"Thé chaï industriel (sirop sucré)", c:"Boissons", l:"moderate", x:"vérifier la teneur en sirops ajoutés selon la marque"},
+  {n:"Jus de raisin", c:"Boissons", l:"high"},
+  {n:"Jus multifruits industriel", c:"Boissons", l:"high", x:"concentre le fructose de plusieurs fruits à la fois"},
+  {n:"Rhum / vodka / whisky (nature)", c:"Boissons", l:"low", x:"faible en petite quantité ; attention aux sodas sucrés utilisés en mélange"},
+  {n:"Champagne / vin mousseux", c:"Boissons", l:"low", x:"faible en petite quantité (1 coupe, 100 ml)"},
 ];
 
 let activeLevel = 'all';
@@ -2209,18 +2462,28 @@ let productScans = [];
 let pendingScanPhoto = null; // dataURL de la photo compressée, ou null
 
 const RISK_KEYWORDS = [
-  {k:"ail", label:"Ail"}, {k:"oignon", label:"Oignon"}, {k:"échalote", label:"Échalote"}, {k:"poireau", label:"Poireau"},
+  {k:"ail", label:"Ail"}, {k:"oignon", label:"Oignon"}, {k:"echalote", label:"Échalote"}, {k:"poireau", label:"Poireau"},
   {k:"miel", label:"Miel"}, {k:"sirop d'agave", label:"Sirop d'agave"}, {k:"sirop de glucose-fructose", label:"Sirop de glucose-fructose"},
-  {k:"fructose", label:"Fructose"}, {k:"sorbitol", label:"Sorbitol (E420)"}, {k:"mannitol", label:"Mannitol (E421)"},
+  {k:"sirop de fructose", label:"Sirop de fructose"}, {k:"fructose", label:"Fructose"},
+  {k:"sorbitol", label:"Sorbitol (E420)"}, {k:"mannitol", label:"Mannitol (E421)"},
   {k:"xylitol", label:"Xylitol"}, {k:"isomalt", label:"Isomalt"}, {k:"maltitol", label:"Maltitol"},
+  {k:"lactitol", label:"Lactitol"}, {k:"polydextrose", label:"Polydextrose"},
   {k:"lactose", label:"Lactose"}, {k:"lait en poudre", label:"Lait en poudre"}, {k:"poudre de lait", label:"Poudre de lait"},
-  {k:"chicorée", label:"Chicorée / inuline"}, {k:"inuline", label:"Inuline"}, {k:"extrait de levure", label:"Extrait de levure"},
-  {k:"fos", label:"FOS / oligofructose"}, {k:"blé", label:"Blé"}, {k:"orge", label:"Orge"}, {k:"seigle", label:"Seigle"},
-  {k:"pois chiche", label:"Pois chiche"}, {k:"lentille", label:"Lentille"}, {k:"soja", label:"Soja (farine/protéine)"},
+  {k:"lait entier", label:"Lait entier"}, {k:"lait demi-ecreme", label:"Lait demi-écrémé"},
+  {k:"chicoree", label:"Chicorée / inuline"}, {k:"inuline", label:"Inuline"}, {k:"extrait de levure", label:"Extrait de levure"},
+  {k:"fos", label:"FOS / oligofructose"}, {k:"ble", label:"Blé"}, {k:"orge", label:"Orge"}, {k:"seigle", label:"Seigle"},
+  {k:"malt", label:"Malt (orge)"}, {k:"pois chiche", label:"Pois chiche"}, {k:"lentille", label:"Lentille"},
+  {k:"haricot rouge", label:"Haricots rouges"}, {k:"soja", label:"Soja (farine/protéine)"},
+  {k:"topinambour", label:"Topinambour"}, {k:"artichaut", label:"Artichaut"}, {k:"pistache", label:"Pistache"},
+  {k:"noix de cajou", label:"Noix de cajou"}, {k:"figue", label:"Figue"}, {k:"datte", label:"Datte"},
+  {k:"pomme concentre", label:"Concentré de pomme"}, {k:"puree de pomme", label:"Purée de pomme"},
 ];
 
+function stripAccents(s){
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
 function analyzeIngredients(text){
-  const lower = text.toLowerCase();
+  const lower = stripAccents(text.toLowerCase());
   const flags = [];
   RISK_KEYWORDS.forEach(r=>{
     if(lower.includes(r.k) && !flags.includes(r.label)) flags.push(r.label);
@@ -2256,6 +2519,19 @@ document.getElementById('scanForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const name = document.getElementById('scanName').value.trim() || 'Produit sans nom';
   const ingredientsText = document.getElementById('scanIngredients').value.trim();
+
+  if(!ingredientsText){
+    document.getElementById('scanResult').innerHTML = `
+      <div class="scan-verdict risky">
+        <span class="face moderate"></span>
+        <div>
+          <div class="sv-title">Écris d'abord la liste des ingrédients</div>
+          <div>Je ne peux pas encore lire le texte d'une photo tout seul — recopie la liste des ingrédients dans le champ ci-dessus (même en vrac, ça suffit), puis clique à nouveau sur « Vérifier ce produit ».</div>
+        </div>
+      </div>`;
+    return;
+  }
+
   const flags = analyzeIngredients(ingredientsText);
 
   productScans.push({
@@ -2681,16 +2957,14 @@ document.getElementById('dislikeSearch').addEventListener('input', renderDislike
    INIT
    ============================================================ */
 (async function init(){
-  // Les écouteurs sont attachés en tout premier, sans rien attendre, pour que
-  // les boutons Patrick/Agathe répondent immédiatement même si Firebase est
-  // lent ou mal configuré (ne dépend d'aucun appel réseau).
-  document.querySelectorAll('.profile-choice').forEach(btn=>{
-    btn.addEventListener('click', ()=> applyProfile(btn.dataset.profile));
-  });
+  // Rendu immédiat des boutons de base, sans rien attendre, pour qu'ils
+  // répondent tout de suite même si Firebase est lent ou mal configuré.
+  renderProfileButtons();
+  renderAdminPanel();
 
   try{
     const rememberedProfile = await storeGet('fodmap-remembered-profile-name', false);
-    if(rememberedProfile && PROFILES.includes(rememberedProfile)){
+    if(rememberedProfile && (BASE_PROFILES.includes(rememberedProfile) || rememberedProfile === ADMIN_PROFILE)){
       profile = rememberedProfile;
     }
   }catch(e){ /* pas grave, on reste sur 'default' */ }
@@ -2707,6 +2981,14 @@ document.getElementById('dislikeSearch').addEventListener('input', renderDislike
     renderJournal();
     renderScanHistory();
   }
+
+  // Complète la liste des profils (ceux créés par l'admin) en arrière-plan,
+  // sans bloquer l'affichage initial.
+  try{
+    await loadProfileList();
+    renderProfileButtons();
+    renderAdminPanel();
+  }catch(e){ /* pas grave, les profils de base restent disponibles */ }
 })();
 </script>
 </body>
